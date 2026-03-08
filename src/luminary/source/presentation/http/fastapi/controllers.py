@@ -5,6 +5,11 @@ from common.presentation.http.dto.response import IDResponse
 from common.presentation.http.fastapi.auth import get_descriptor, require_authenticated
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, UploadFile
+from luminary_files.application.interfaces.services.file_service import (
+    IFileService,
+    UploadFileCommand,
+)
+
 from luminary.content.application.interfaces.services.content_service import (
     IContentService,
 )
@@ -13,10 +18,6 @@ from luminary.source.application.interfaces.usecases.command.create_source_use_c
     ICreateFileSourceUseCase,
 )
 from luminary.source.presentation.http.dto.request import CreateFileSourceRequest
-from luminary_files.application.interfaces.services.file_service import (
-    IFileService,
-    UploadFileCommand,
-)
 
 
 command_router = APIRouter()
@@ -42,7 +43,7 @@ class SourceCommandController:
         )
         source_id = await self.create_file_source_use_case.execute(
             CreateFileSourceCommand(
-                user_id=descriptor, title=request.title, file_id=file_id, data=file.file
+                user_id=descriptor, title=request.title, file_id=file_id
             )
         )
 
