@@ -1,5 +1,5 @@
 [project]
-name = "showcase"
+name = "luminary"
 version = "0.1.0"
 description = ""
 authors = [
@@ -14,22 +14,16 @@ dependencies = [
     "bcrypt (>=4.3.0,<5.0.0)",
     "python-jose (>=3.5.0,<4.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
-    "fastapi-utils[all] (>=0.8.0,<0.9.0)",
-    "python-multipart (>=0.0.20,<0.0.21)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
     "pydantic-settings (>=2.11.0,<3.0.0)",
     "dependency-injector (>=4.48.2,<5.0.0)",
     "uvicorn (>=0.37.0,<0.38.0)",
-    "bandit (>=1.9.2,<2.0.0)",
-    "detect-secrets (>=1.5.0,<2.0.0)",
     "llama-index (>=0.14.12,<0.15.0)",
-    "ipykernel (>=7.1.0,<8.0.0)",
-    "aiogram (>=3.24.0,<4.0.0)",
 ]
 
 [tool.poetry]
-packages = [{include = "showcase", from = "src"}]
+packages = [{include = "luminary", from = "src"}]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -50,12 +44,16 @@ dev = [
     "types-psycopg2 (>=2.9.21.20250915,<3.0.0.0)",
     "types-pyyaml (>=6.0.12.20250915,<7.0.0.0)",
     "alembic (>=1.16.5,<2.0.0)",
+    "xenon (>=0.9.3,<0.10.0)",
+    "bandit (>=1.9.4,<2.0.0)",
+    "detect-secrets (>=1.5.0,<2.0.0)",
+    "ipykernel (>=7.2.0,<8.0.0)",
 ]
 
 [tool.ruff]
 line-length = 88
 target-version = "py311"
-src = ["src/showcase"]
+src = ["src/luminary"]
 include = ["*.py", "*.pyi"]
 exclude = ["build", "dist", ".venv", ".git", "__pycache__", "migrations/versions"]
 fix = true
