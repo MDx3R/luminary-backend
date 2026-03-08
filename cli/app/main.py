@@ -4,19 +4,21 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
+import uvicorn
 from bootstrap.config import AppConfig
 from bootstrap.utils import log_config
 from common.infrastructure.database.sqlalchemy.database import Database
 from common.infrastructure.di.container.common import CommonContainer
 from common.infrastructure.logger.logging.logger_factory import LoggerFactory
 from common.infrastructure.queues.faststream.utils import create_rabbit
-from common.infrastructure.storage.minio.storage import MinioStorage
-from fastapi import FastAPI
+from common.infrastructure.storage.minio.client import MinioStorage
+from common.infrastructure.storage.qdrant.client import QdrantStore
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from filetype.types import document
-from llama_index.core import SimpleDirectoryReader, StorageContext, VectorStoreIndex
-from llama_index.core.vector_stores import SimpleVectorStore
+from llama_index.core import Settings, VectorStoreIndex
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.vector_stores.qdrant import QdrantVectorStore
 from luminary_files.application.interfaces.services.file_service import IFileService
 from luminary_files.infrastructure.di.container import FileContainer
 
@@ -27,6 +29,19 @@ from luminary.source.application.interfaces.usecases.command.create_source_use_c
     ICreateFileSourceUseCase,
 )
 from luminary.source.infrastructure.di.container import SourceContainer
+from luminary.source.presentation.http.fastapi.controllers import (
+    command_router as source_command_router,
+)
+
+
+# Load configuration
+config = AppConfig.load()
+
+# Logger
+logger = LoggerFactory.create(None, config.env, config.logger)
+logger.info("logger initialized")
+
+log_config(logger, config)
 
 
 def main() -> FastAPI:
@@ -36,15 +51,6 @@ def main() -> FastAPI:
         Configured App instance.
 
     """
-    # Load configuration
-    config = AppConfig.load()
-
-    # Logger
-    logger = LoggerFactory.create(None, config.env, config.logger)
-    logger.info("logger initialized")
-
-    log_config(logger, config)
-
     # Database
     logger.info("initializing database...")
     database = Database.create(config.db, logger)
@@ -60,15 +66,6 @@ def main() -> FastAPI:
     broker = create_rabbit(config.rabbit)
     logger.info("broker initialized")
 
-    # Vector store
-    logger.info("initializing vector store...")
-    docs = SimpleDirectoryReader("./data").load_data()
-    storage_context = StorageContext.from_defaults(vector_store=SimpleVectorStore())
-    vector_store_index = VectorStoreIndex.from_documents(
-        docs, storage_context=storage_context
-    )
-    logger.info("vector store initialized")
-
     # LLM
     llm = MappedOpenAI(
         model=config.llm.model,
@@ -83,7 +80,21 @@ def main() -> FastAPI:
     embed_model = OpenAIEmbedding(
         api_key=config.llm.api_key, api_base=config.llm.base_url
     )
+
     logger.info("embedding model initialized")
+
+    Settings.llm, Settings.embed_model = llm, embed_model
+
+    # Vector store
+    logger.info("initializing vector store...")
+
+    qdrant_store = QdrantStore.create(config.qdrant)
+    vector_store = QdrantVectorStore(
+        collection_name=config.qdrant.collection_name, aclient=qdrant_store.get_client()
+    )
+    vector_store_index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
+
+    logger.info("vector store initialized")
 
     # Create FastAPI server
     @asynccontextmanager
@@ -92,6 +103,9 @@ def main() -> FastAPI:
         yield
         logger.info("application shutdown begins")
         await database.shutdown()
+        await broker.stop()
+        await storage.shutdown()
+        await qdrant_store.shutdown()
 
     server = FastAPI(lifespan=lifespan)
 
@@ -103,6 +117,7 @@ def main() -> FastAPI:
     uuid_generator = common_container.uuid_generator
     query_executor = common_container.query_executor
     clock = common_container.clock
+    unit_of_work = common_container.unit_of_work
     event_bus = common_container.event_bus
 
     file_container = FileContainer(
@@ -135,10 +150,11 @@ def main() -> FastAPI:
         clock=clock,
         uuid_generator=uuid_generator,
         query_executor=query_executor,
+        unit_of_work=unit_of_work,
+        event_bus=event_bus,
     )
 
     # Register routes
-
     server.dependency_overrides[IFileService] = lambda: file_container.file_service()
     server.dependency_overrides[ICreateFileSourceUseCase] = (
         lambda: source_container.create_file_source_use_case()
@@ -146,16 +162,21 @@ def main() -> FastAPI:
 
     server.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:8081", config.deploy.external_url],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    # Create and configure app
+    router = APIRouter()
+    router.include_router(source_command_router, prefix="/sources")
+
+    server.include_router(source_command_router, prefix="/api/v1")
+
     return server
 
 
 app = main()
+
 if __name__ == "__main__":
-    pass
+    uvicorn.run(app, host="0.0.0.0", port=8000)

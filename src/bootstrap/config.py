@@ -5,6 +5,7 @@ from common.infrastructure.config.database_config import DatabaseConfig, S3Confi
 from common.infrastructure.config.deployment_meta import DeploymentMeta
 from common.infrastructure.config.llm_config import LLMConfig
 from common.infrastructure.config.logger_config import LoggerConfig
+from common.infrastructure.config.qdrant_config import QdrantConfig
 from common.infrastructure.config.rabbit_config import RabbitMQConfig
 
 
@@ -15,6 +16,7 @@ class AppConfig(Settings):
     s3: S3Config
     deploy: DeploymentMeta
     rabbit: RabbitMQConfig
+    qdrant: QdrantConfig
 
     def masked_dict(self) -> dict[str, Any]:
         return self.model_dump(
@@ -25,6 +27,6 @@ class AppConfig(Settings):
                 "llm": {"api_key"},
                 "s3": {"secret_key"},
                 "rabbit": {"password"},
-                "telegram": {"token"},
+                "qdrant": {"secret_key"},
             },
         )
