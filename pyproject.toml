@@ -2,9 +2,7 @@
 name = "luminary"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "MDx3R",email = "nationmdxr@gmail.com"}
-]
+authors = [{ name = "MDx3R", email = "nationmdxr@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
@@ -26,7 +24,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "luminary", from = "src"}]
+packages = [{ include = "luminary", from = "src" }]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -58,51 +56,58 @@ line-length = 88
 target-version = "py311"
 src = ["src/luminary"]
 include = ["*.py", "*.pyi"]
-exclude = ["build", "dist", ".venv", ".git", "__pycache__", "migrations/versions"]
+exclude = [
+    "build",
+    "dist",
+    ".venv",
+    ".git",
+    "__pycache__",
+    "migrations/versions",
+]
 fix = true
 
 [tool.ruff.lint]
 select = [
-  "E",      # ошибки стиля (flake8) 
-  "F",      # синтаксические ошибки
-  "I",      # сортировка импортов (isort)
-  "B",      # баги (flake8-bugbear)
-  "C",      # complexity
-  "D",      # docstrings (pydocstyle)
-  "N",      # pep8-naming (имена переменных, классов)
-  "UP",     # pyupgrade (новый синтаксис)
-  "C90",    # McCabe (сложность)
-  "PL",     # pylint совместимость
-  "PT",     # типы (частично mypy)
-  "RUF",    # собственные правила Ruff
-  "SLF001", # private member access
-  "FAST001",# FastAPI
-  "FAST002",
-  "FAST003",
+    "E",       # ошибки стиля (flake8) 
+    "F",       # синтаксические ошибки
+    "I",       # сортировка импортов (isort)
+    "B",       # баги (flake8-bugbear)
+    "C",       # complexity
+    "D",       # docstrings (pydocstyle)
+    "N",       # pep8-naming (имена переменных, классов)
+    "UP",      # pyupgrade (новый синтаксис)
+    "C90",     # McCabe (сложность)
+    "PL",      # pylint совместимость
+    "PT",      # типы (частично mypy)
+    "RUF",     # собственные правила Ruff
+    "SLF001",  # private member access
+    "FAST001", # FastAPI
+    "FAST002",
+    "FAST003",
 ]
 ignore = [
     "RUF001",
-    "D203", 
-    "D213", 
-    "E501", 
-    "D100", # docstrings
-    "D101", 
-    "D102", 
-    "D103", 
-    "D104", 
-    "D105", 
-    "D106", 
+    "D203",
+    "D213",
+    "E501",
+    "D100",   # docstrings
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
     "D107",
 ]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["conference"]
+known-first-party = ["luminary"]
 lines-after-imports = 2
 
 [tool.mypy]
 mypy_path = "src"
-python_version = 3.11
+python_version = "3.11"
 strict = true
 disallow_untyped_defs = true
 disallow_any_unimported = true
@@ -119,7 +124,16 @@ module = "tests.*"
 disable_error_code = ["no-untyped-def", "misc", "no-any-unimported"]
 
 [[tool.mypy.overrides]]
-module = ["psycopg2.*", "testcontainers.postgres.*", "jose.*", "yaml.*"]
+module = [
+    "psycopg2.*",
+    "testcontainers.postgres.*",
+    "testcontainers.minio.*",
+    "jose.*",
+    "yaml.*",
+    "filetype.*",
+    "llama_index.*",
+    "llama_cloud.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
