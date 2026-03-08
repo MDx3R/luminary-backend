@@ -12,10 +12,10 @@ class LlamaIndexFileContentExtractor(IFileContentExtractor):
     def __init__(self, reader: BaseReader) -> None:
         self.reader = reader
 
-    async def extract(self, data: BinaryIO) -> bytes:
+    async def extract(self, filename: str, data: BinaryIO) -> bytes:
         try:
             docs = await self.reader.aload_data(
-                unstructured_kwargs={"file": data, "metadata_filename": "file.txt"}
+                unstructured_kwargs={"file": data, "metadata_filename": filename}
             )
 
             all_text_parts: list[str] = []

@@ -9,6 +9,7 @@ from uuid import UUID
 class ProcessFileCommand:
     user_id: UUID
     data: BinaryIO
+    filename: str
     # file_id: UUID
 
 

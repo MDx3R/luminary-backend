@@ -38,6 +38,8 @@ class SourceRepository(ISourceRepository):
         await self.executor.save(model)
 
     async def remove(self, entity: Source) -> None:
+        # TODO: Soft deletes
+
         # NOTE: Select is needed for proper delete
         stmt = select(SourceBase).where(SourceBase.source_id == entity.id.value)
         result = await self.executor.execute_scalar_one(stmt)

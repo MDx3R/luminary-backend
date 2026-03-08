@@ -1,5 +1,6 @@
 from common.application.interfaces.handlers.handler import IEventHandler
 from common.domain.interfaces.clock import IClock
+
 from luminary.content.application.interfaces.services.content_service import (
     IContentService,
 )

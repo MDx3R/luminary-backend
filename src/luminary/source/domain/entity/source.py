@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.domain.interfaces.entity import IEntity
+from common.domain.interfaces.entity import Entity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import EntityId, UserId
 from common.domain.value_objects.title import Title
@@ -20,7 +20,7 @@ class SourceId(EntityId): ...
 
 
 @dataclass
-class Source(IEntity):
+class Source(Entity):
     id: SourceId
     owner_id: UserId
     title: Title

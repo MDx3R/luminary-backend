@@ -38,7 +38,9 @@ class ContentService(IContentService):
         self.content_storage = content_storage
 
     async def process_file(self, command: ProcessFileCommand) -> UUID:
-        extracted_content = await self.file_content_extractor.extract(command.data)
+        extracted_content = await self.file_content_extractor.extract(
+            command.filename, command.data
+        )
 
         content = self.content_factory.create(
             user_id=UserId(command.user_id),

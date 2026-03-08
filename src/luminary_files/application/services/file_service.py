@@ -24,6 +24,7 @@ from luminary_files.domain.interfaces.file_factory import IFileFactory
 
 
 class FileService(IFileService):
+    # TODO: Use init
     BUCKET_NAME: ClassVar[str] = "files"
     EXPIRATION_DELTA: ClassVar[timedelta] = timedelta(days=7)
 

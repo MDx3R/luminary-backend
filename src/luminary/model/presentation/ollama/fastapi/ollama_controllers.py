@@ -4,6 +4,7 @@ from datetime import datetime
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse, StreamingResponse
+
 from luminary.model.application.dto.dto import OllamaChatMessage
 from luminary.model.application.dto.request import (
     OllamaChatRequest,

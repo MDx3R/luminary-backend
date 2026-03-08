@@ -14,10 +14,12 @@ class FileTypeIntrospector(IFileTypeIntrospector):
         head = data.read(261)
         data.seek(0)
         kind: Type | None = filetype.guess(head)  # type: ignore
-        if kind is None:
-            raise InvalidFileTypeError
 
-        return FileType(
-            extension=kind.extension,  # pyright: ignore[reportUnknownArgumentType]
-            mime=kind.mime,  # pyright: ignore[reportUnknownArgumentType]
-        )
+        if kind is not None:
+            return FileType(extension=kind.extension, mime=kind.mime)
+
+        try:
+            head.decode("utf-8")
+            return FileType(extension="txt", mime="text/plain")
+        except UnicodeDecodeError as exc:
+            raise InvalidFileTypeError() from exc

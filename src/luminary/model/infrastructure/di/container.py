@@ -1,0 +1,40 @@
+"""Lecturer bounded context DI container."""
+
+from typing import Any
+
+from dependency_injector import containers, providers
+from llama_index.readers.file import UnstructuredReader
+
+from luminary.model.application.services.embedding_service import EmbeddingService
+from luminary.model.infrastructure.services.llama_index.file_content_extractor import (
+    LlamaIndexFileContentExtractor,
+)
+from luminary.model.infrastructure.services.llama_index.vector_store import (
+    LlamaIndexVectorStore,
+)
+
+
+class ModelContainer(containers.DeclarativeContainer):
+    """Dependency injection container for model bounded context."""
+
+    # Explicit dependency declarations
+
+    content_storage: providers.Dependency[Any] = providers.Dependency()
+
+    vector_store_index: providers.Dependency[Any] = providers.Dependency()
+    embed_model: providers.Dependency[Any] = providers.Dependency()
+
+    # Storage
+    vector_store = providers.Singleton(
+        LlamaIndexVectorStore,
+        index=vector_store_index,
+        embed_model=embed_model,
+    )
+
+    # Services
+    content_extractor = providers.Singleton(
+        LlamaIndexFileContentExtractor, reader=UnstructuredReader()
+    )
+    embedding_service = providers.Singleton(
+        EmbeddingService, content_storage=content_storage, vector_store=vector_store
+    )

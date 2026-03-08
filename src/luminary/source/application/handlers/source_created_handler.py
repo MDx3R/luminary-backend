@@ -70,7 +70,11 @@ class SourceCreatedHandler(IEventHandler[SourceCreatedEvent]):
 
         try:
             content_id = await self.content_service.process_file(
-                ProcessFileCommand(user_id=source.owner_id.value, data=raw_content)
+                ProcessFileCommand(
+                    user_id=source.owner_id.value,
+                    data=raw_content,
+                    filename=source.title.value,
+                )
             )
             source.fetch(ContentId(content_id), self.clock.now())
         except ParsingError:

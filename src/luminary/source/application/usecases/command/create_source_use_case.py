@@ -30,11 +30,11 @@ from luminary.source.domain.interfaces.source_factory import (
 class CreateFileSourceUseCase(ICreateFileSourceUseCase):
     def __init__(
         self,
-        source_repository: ISourceRepository,
         source_factory: ISourceFactory,
+        source_repository: ISourceRepository,
     ) -> None:
-        self.source_repository = source_repository
         self.source_factory = source_factory
+        self.source_repository = source_repository
 
     async def execute(self, command: CreateFileSourceCommand) -> UUID:
         source = self.source_factory.create(
@@ -81,7 +81,9 @@ class CreatePageSourceUseCase(ICreatePageSourceUseCase):
     async def execute(self, command: CreatePageSourceCommand) -> UUID:
         user_id = command.user_id
         content_id = await self.content_service.process_file(
-            ProcessFileCommand(user_id=user_id, data=command.data)
+            ProcessFileCommand(
+                user_id=user_id, data=command.data, filename=command.title
+            )
         )
         source = self.source_factory.create(
             PageSourceFactoryDTO(

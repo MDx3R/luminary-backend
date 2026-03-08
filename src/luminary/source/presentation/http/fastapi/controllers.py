@@ -10,9 +10,6 @@ from luminary_files.application.interfaces.services.file_service import (
     UploadFileCommand,
 )
 
-from luminary.content.application.interfaces.services.content_service import (
-    IContentService,
-)
 from luminary.source.application.interfaces.usecases.command.create_source_use_case import (
     CreateFileSourceCommand,
     ICreateFileSourceUseCase,
@@ -27,7 +24,6 @@ command_router = APIRouter()
 class SourceCommandController:
     create_file_source_use_case: ICreateFileSourceUseCase = Depends()
     file_service: IFileService = Depends()
-    content_service: IContentService = Depends()
 
     @command_router.post("/", dependencies=[Depends(require_authenticated)])
     async def create_source(

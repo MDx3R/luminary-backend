@@ -203,7 +203,9 @@ class TestCreatePageSourceUseCase:
 
         # Assert
         self.content_service.process_file.assert_awaited_once_with(
-            ProcessFileCommand(user_id=self.user_id, data=self.command.data)
+            ProcessFileCommand(
+                user_id=self.user_id, data=self.command.data, filename=self.title
+            )
         )
 
     async def test_calls_repository_add_with_created_source(self) -> None:

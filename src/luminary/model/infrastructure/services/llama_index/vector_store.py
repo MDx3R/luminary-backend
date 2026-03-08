@@ -9,7 +9,7 @@ from luminary.model.application.interfaces.repositories.vector_store import (
 )
 
 
-class LlamaIndexEngineVectorStore(IVectorStore):
+class LlamaIndexVectorStore(IVectorStore):
     def __init__(self, index: VectorStoreIndex, embed_model: BaseEmbedding) -> None:
         self.index = index
         self.embed_model = embed_model

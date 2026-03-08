@@ -15,9 +15,7 @@ from luminary.source.domain.entity.source import SourceId
 
 class DeleteSourceUseCase(IDeleteSourceUseCase):
     def __init__(
-        self,
-        repository: ISourceRepository,
-        access_policy: ISourceAccessPolicy,
+        self, repository: ISourceRepository, access_policy: ISourceAccessPolicy
     ) -> None:
         self.repository = repository
         self.access_policy = access_policy

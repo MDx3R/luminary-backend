@@ -20,5 +20,6 @@ class EmbeddingService(IEmbeddingService):
         self.vector_store = vector_store
 
     async def embed_content(self, command: EmbedContentCommand) -> None:
+        # TODO: Accept bytes, not ref
         content = await self.content_storage.get(ObjectKey(str(command.content_id)))
         await self.vector_store.save(content.read().decode(), command.metadata)

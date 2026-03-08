@@ -25,3 +25,7 @@ class MappedOpenAI(OpenAI):
             result["model"] = self.MODEL_MAP[model]
 
         return result
+
+    @classmethod
+    def override(cls, key: str, value: str) -> None:
+        cls.MODEL_MAP[key] = value
