@@ -8,8 +8,10 @@ from idp.identity.application.interfaces.services.token_intospector import (
 from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-oauth2_scheme_no_error = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", refreshUrl="auth/refresh")
+oauth2_scheme_no_error = OAuth2PasswordBearer(
+    tokenUrl="auth/login", refreshUrl="auth/refresh", auto_error=False
+)
 
 
 def is_authenticated(

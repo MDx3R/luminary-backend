@@ -477,15 +477,16 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
 
     router = APIRouter()
+
+    server.include_router(identity_router, prefix="/users", tags=["users"])
+    server.include_router(auth_router, prefix="/auth", tags=["auth"])
+
     router.include_router(source_command_router, prefix="/sources", tags=["sources"])
     router.include_router(
         assistant_command_router, prefix="/assistants", tags=["assistants"]
     )
     router.include_router(chat_command_router, prefix="/chats", tags=["chats"])
     router.include_router(folder_command_router, prefix="/folders", tags=["folders"])
-
-    router.include_router(identity_router, prefix="/users", tags=["users"])
-    router.include_router(auth_router, prefix="/auth", tags=["auth"])
 
     server.include_router(router, prefix="/api/v1")
 

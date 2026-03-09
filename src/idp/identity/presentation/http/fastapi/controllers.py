@@ -33,7 +33,11 @@ class IdentityController:
     ) -> IdentityResponse:
         return IdentityResponse(id=descriptor.identity_id, username=descriptor.username)
 
-    @identity_router.post("/register", dependencies=[Depends(require_unauthenticated)])
+    @identity_router.post(
+        "/register",
+        dependencies=[Depends(require_unauthenticated)],
+        status_code=status.HTTP_201_CREATED,
+    )
     async def register(self, request: RegisterUserRequest) -> IDResponse:
         try:
             identity_id = await self.create_identity_use_case.execute(

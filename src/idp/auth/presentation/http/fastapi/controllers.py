@@ -3,6 +3,7 @@ from typing import Annotated
 
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, Form, HTTPException, status
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from idp.auth.application.dtos.commands.login_command import LoginCommand
 from idp.auth.application.dtos.commands.logout_command import LogoutCommand
 from idp.auth.application.dtos.commands.refresh_token_command import (
@@ -17,6 +18,7 @@ from idp.auth.application.interfaces.usecases.command.logout_use_case import (
 from idp.auth.application.interfaces.usecases.command.refresh_token_use_case import (
     IRefreshTokenUseCase,
 )
+from idp.auth.presentation.http.dto.request import RefreshTokenRequest
 from idp.auth.presentation.http.dto.response import AuthTokensResponse
 from idp.identity.application.exceptions import (
     InvalidPasswordError,
@@ -40,13 +42,11 @@ class AuthController:
 
     @auth_router.post("/login", dependencies=[Depends(require_unauthenticated)])
     async def login(
-        self,
-        username: Annotated[str, Form()],
-        password: Annotated[str, Form()],
+        self, form: Annotated[OAuth2PasswordRequestForm, Depends()]
     ) -> AuthTokensResponse:
         try:
             result = await self.login_use_case.execute(
-                LoginCommand(username=username, password=password)
+                LoginCommand(username=form.username, password=form.password)
             )
             return AuthTokensResponse(**asdict(result))
         except (InvalidPasswordError, InvalidUsernameError) as exc:
@@ -68,7 +68,9 @@ class AuthController:
 
     @auth_router.post("/refresh", dependencies=[Depends(require_authenticated)])
     async def refresh(
-        self, token: Annotated[str, Depends(get_token)]
+        self, form: Annotated[RefreshTokenRequest, Form()]
     ) -> AuthTokensResponse:
-        result = await self.refresh_token_use_case.execute(RefreshTokenCommand(token))
+        result = await self.refresh_token_use_case.execute(
+            RefreshTokenCommand(form.refresh_token)
+        )
         return AuthTokensResponse(**asdict(result))
