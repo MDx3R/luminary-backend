@@ -2,11 +2,13 @@ from common.application.interfaces.services.event_bus import IEventBus
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
 
 from luminary.assistant.domain.entity.assistant import AssistantId
+from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
 from luminary.folder.domain.entity.folder import Folder
 from luminary.folder.domain.value_objects.folder_id import FolderId
+from luminary.source.domain.entity.source import SourceId
 
 
 class EventBusFolderRepository(IFolderRepository):
@@ -37,3 +39,16 @@ class EventBusFolderRepository(IFolderRepository):
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         await self.repository.clear_assistant_reference(assistant_id)
+
+    async def clear_source_reference(self, source_id: SourceId) -> None:
+        await self.repository.clear_source_reference(source_id)
+
+    async def clear_chat_association(
+        self, folder_id: FolderId, chat_id: ChatId
+    ) -> None:
+        await self.repository.clear_chat_association(folder_id, chat_id)
+
+    async def clear_source_association(
+        self, folder_id: FolderId, source_id: SourceId
+    ) -> None:
+        await self.repository.clear_source_association(folder_id, source_id)

@@ -44,7 +44,7 @@ class ChatAssistantChangedEvent(ChatEvent):
 
 @dataclass(frozen=True)
 class ChatDeletedEvent(ChatEvent):
-    pass
+    folder_id: UUID | None
 
 
 # Message events (message aggregate, chat_id for context)

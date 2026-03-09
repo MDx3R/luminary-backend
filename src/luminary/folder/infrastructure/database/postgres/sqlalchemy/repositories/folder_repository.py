@@ -1,9 +1,10 @@
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from sqlalchemy import select, update
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.orm import joinedload
 
 from luminary.assistant.domain.entity.assistant import AssistantId
+from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.folder.application.interfaces.repositories.folder_repository import (
     IFolderRepository,
 )
@@ -14,7 +15,10 @@ from luminary.folder.infrastructure.database.postgres.sqlalchemy.mappers.folder_
 )
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
     FolderBase,
+    FolderChatAssociation,
+    FolderSourceAssociation,
 )
+from luminary.source.domain.entity.source import SourceId
 
 
 class FolderRepository(IFolderRepository):
@@ -50,5 +54,33 @@ class FolderRepository(IFolderRepository):
             update(FolderBase)
             .where(FolderBase.assistant_id == assistant_id.value)
             .values(assistant_id=None)
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_source_reference(self, source_id: SourceId) -> None:
+        stmt = delete(FolderSourceAssociation).where(
+            FolderSourceAssociation.source_id == source_id.value
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_chat_association(
+        self, folder_id: FolderId, chat_id: ChatId
+    ) -> None:
+        stmt = delete(FolderChatAssociation).where(
+            and_(
+                FolderChatAssociation.folder_id == folder_id.value,
+                FolderChatAssociation.chat_id == chat_id.value,
+            )
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_source_association(
+        self, folder_id: FolderId, source_id: SourceId
+    ) -> None:
+        stmt = delete(FolderSourceAssociation).where(
+            and_(
+                FolderSourceAssociation.folder_id == folder_id.value,
+                FolderSourceAssociation.source_id == source_id.value,
+            )
         )
         await self.executor.execute(stmt)

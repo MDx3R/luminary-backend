@@ -1,6 +1,6 @@
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import joinedload
 
 from luminary.assistant.domain.entity.assistant import AssistantId
@@ -14,7 +14,9 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.mappers.chat_mapp
 )
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
     ChatBase,
+    ChatSourceAssociation,
 )
+from luminary.source.domain.entity.source import SourceId
 
 
 class ChatRepository(IChatRepository):
@@ -47,5 +49,11 @@ class ChatRepository(IChatRepository):
             update(ChatBase)
             .where(ChatBase.assistant_id == assistant_id.value)
             .values(assistant_id=None)
+        )
+        await self.executor.execute(stmt)
+
+    async def clear_source_reference(self, source_id: SourceId) -> None:
+        stmt = delete(ChatSourceAssociation).where(
+            ChatSourceAssociation.source_id == source_id.value
         )
         await self.executor.execute(stmt)

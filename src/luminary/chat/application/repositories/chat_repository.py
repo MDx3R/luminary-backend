@@ -7,6 +7,7 @@ from luminary.chat.application.interfaces.repositories.chat_repository import (
 )
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.source.domain.entity.source import SourceId
 
 
 class EventBusChatRepository(IChatRepository):
@@ -37,3 +38,6 @@ class EventBusChatRepository(IChatRepository):
 
     async def clear_assistant_reference(self, assistant_id: AssistantId) -> None:
         await self.repository.clear_assistant_reference(assistant_id)
+
+    async def clear_source_reference(self, source_id: SourceId) -> None:
+        await self.repository.clear_source_reference(source_id)

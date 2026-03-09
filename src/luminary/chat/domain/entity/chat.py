@@ -41,6 +41,9 @@ class Chat(Entity):
     def is_owned_by(self, user_id: UserId) -> bool:
         return self.owner_id == user_id
 
+    def is_standalone(self) -> bool:
+        return self.folder_id is None
+
     def add_source(self, source_id: SourceId) -> None:
         if self.has_source(source_id):
             return
@@ -70,9 +73,7 @@ class Chat(Entity):
         if self.info.name == new_name:
             return
         self.info = ChatInfo(new_name)
-        self._record_event(
-            ChatNameChangedEvent(chat_id=self.id.value, name=new_name)
-        )
+        self._record_event(ChatNameChangedEvent(chat_id=self.id.value, name=new_name))
 
     def change_settings(self, new_settings: ChatSettings) -> None:
         if self.settings == new_settings:
@@ -105,7 +106,12 @@ class Chat(Entity):
         if self.is_deleted:
             return
         self.is_deleted = True
-        self._record_event(ChatDeletedEvent(chat_id=self.id.value))
+        self._record_event(
+            ChatDeletedEvent(
+                chat_id=self.id.value,
+                folder_id=self.folder_id.value if self.folder_id else None,
+            )
+        )
 
     @classmethod
     def create(  # noqa: PLR0913
