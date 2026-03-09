@@ -47,6 +47,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
+            is_deleted=base.is_deleted,
         )
 
     @to_domain.register
@@ -69,6 +70,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
+            is_deleted=base.is_deleted,
         )
 
     @to_domain.register
@@ -91,6 +93,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=base.fetch_status,
             created_at=DateTime(base.created_at),
+            is_deleted=base.is_deleted,
         )
 
     @singledispatchmethod
@@ -118,6 +121,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=source.fetch_status,
             created_at=source.created_at.value,
+            is_deleted=source.is_deleted,
         )
 
     @to_persistence.register
@@ -140,6 +144,7 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=source.fetch_status,
             created_at=source.created_at.value,
+            is_deleted=source.is_deleted,
         )
 
     @to_persistence.register
@@ -162,4 +167,5 @@ class SourceMapper:
             fetched_at=fetched_at,
             fetch_status=source.fetch_status,
             created_at=source.created_at.value,
+            is_deleted=source.is_deleted,
         )

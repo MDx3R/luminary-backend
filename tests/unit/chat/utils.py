@@ -36,6 +36,7 @@ def make_chat(  # noqa: PLR0913
         created_at=DateTime(datetime.now(UTC)),
         info=ChatInfo(name=name),
         settings=settings or make_chat_settings(model_id=model_id),
+        is_deleted=False,
     )
 
 

@@ -71,6 +71,7 @@ class TestChat:
             created_at=self.created_at,
             info=ChatInfo(name=self.name),
             settings=self.settings,
+            is_deleted=False,
         )
 
     def test_create_chat_success(self):

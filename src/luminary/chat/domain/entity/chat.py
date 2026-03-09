@@ -9,6 +9,7 @@ from common.domain.value_objects.id import UserId
 from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.events.events import (
     ChatAssistantChangedEvent,
+    ChatDeletedEvent,
     ChatNameChangedEvent,
     ChatSettingsChangedEvent,
     ChatSourceAddedEvent,
@@ -30,6 +31,7 @@ class Chat(Entity):
     assistant_id: AssistantId | None
     settings: ChatSettings
     created_at: DateTime
+    is_deleted: bool
     _sources: set[SourceId] = field(default_factory=set[SourceId])
 
     @property
@@ -57,6 +59,12 @@ class Chat(Entity):
 
     def has_source(self, source_id: SourceId) -> bool:
         return source_id in self._sources
+
+    def name_matches(self, name: str) -> bool:
+        return self.info.name == name
+
+    def settings_matches(self, settings: ChatSettings) -> bool:
+        return self.settings == settings
 
     def change_name(self, new_name: str) -> None:
         if self.info.name == new_name:
@@ -93,6 +101,12 @@ class Chat(Entity):
             ChatAssistantChangedEvent(chat_id=self.id.value, assistant_id=None)
         )
 
+    def delete(self) -> None:
+        if self.is_deleted:
+            return
+        self.is_deleted = True
+        self._record_event(ChatDeletedEvent(chat_id=self.id.value))
+
     @classmethod
     def create(  # noqa: PLR0913
         cls,
@@ -112,4 +126,5 @@ class Chat(Entity):
             assistant_id=assistant_id,
             settings=settings,
             created_at=created_at,
+            is_deleted=False,
         )

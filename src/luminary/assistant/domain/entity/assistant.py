@@ -50,6 +50,12 @@ class Assistant(Entity):
     def is_owned_by(self, user_id: UserId) -> bool:
         return self.owner_id == user_id
 
+    def info_matches(self, name: str, description: str) -> bool:
+        return self.info.name == name and self.info.description == description
+
+    def instructions_matches(self, prompt: str) -> bool:
+        return self.instructions.prompt == prompt
+
     def change_name(self, new_name: str) -> None:
         if self.info.name == new_name:
             return

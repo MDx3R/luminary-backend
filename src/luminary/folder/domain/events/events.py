@@ -51,3 +51,8 @@ class FolderInfoChangedEvent(FolderEvent):
 @dataclass(frozen=True)
 class FolderEditorContentUpdatedEvent(FolderEvent):
     pass
+
+
+@dataclass(frozen=True)
+class FolderDeletedEvent(FolderEvent):
+    pass

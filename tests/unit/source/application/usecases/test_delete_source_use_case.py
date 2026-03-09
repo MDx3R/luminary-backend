@@ -59,10 +59,11 @@ class TestDeleteSourceUseCase:
             self.user_id, self.source
         )
 
-    async def test_calls_repository_delete_with_source_id(self) -> None:
+    async def test_calls_repository_save_with_soft_deleted_source(self) -> None:
         await self.use_case.execute(self.command)
 
-        self.repository.remove.assert_awaited_once_with(self.source)
+        self.repository.save.assert_awaited_once_with(self.source)
+        assert self.source.is_deleted
 
     async def test_raises_not_found_error_when_source_not_exists(self) -> None:
         self.repository.get_by_id.side_effect = NotFoundError(self.source_id)
@@ -78,13 +79,13 @@ class TestDeleteSourceUseCase:
 
         self.access_policy.assert_is_allowed.assert_not_called()
 
-    async def test_does_not_delete_when_source_not_found(self) -> None:
+    async def test_does_not_save_when_source_not_found(self) -> None:
         self.repository.get_by_id.side_effect = NotFoundError(self.source_id)
 
         with pytest.raises(NotFoundError):
             await self.use_case.execute(self.command)
 
-        self.repository.remove.assert_not_awaited()
+        self.repository.save.assert_not_awaited()
 
     async def test_raises_access_policy_error_when_access_denied(self) -> None:
         self.access_policy.assert_is_allowed.side_effect = AccessPolicyError(
@@ -94,7 +95,7 @@ class TestDeleteSourceUseCase:
         with pytest.raises(AccessPolicyError):
             await self.use_case.execute(self.command)
 
-    async def test_does_not_delete_when_access_denied(self) -> None:
+    async def test_does_not_save_when_access_denied(self) -> None:
         self.access_policy.assert_is_allowed.side_effect = AccessPolicyError(
             self.source_id, "Access denied"
         )
@@ -102,4 +103,4 @@ class TestDeleteSourceUseCase:
         with pytest.raises(AccessPolicyError):
             await self.use_case.execute(self.command)
 
-        self.repository.remove.assert_not_awaited()
+        self.repository.save.assert_not_awaited()

@@ -11,6 +11,7 @@ from luminary.folder.domain.events.events import (
     FolderAssistantChangedEvent,
     FolderChatAddedEvent,
     FolderChatRemovedEvent,
+    FolderDeletedEvent,
     FolderEditorContentUpdatedEvent,
     FolderInfoChangedEvent,
     FolderSourceAddedEvent,
@@ -29,6 +30,7 @@ class Folder(Entity):
     info: FolderInfo
     assistant_id: AssistantId | None
     created_at: DateTime
+    is_deleted: bool
     _chats: set[ChatId] = field(default_factory=set[ChatId])
     _sources: set[SourceId] = field(default_factory=set[SourceId])
     editor_content: EditorContent | None = None
@@ -129,6 +131,13 @@ class Folder(Entity):
     def has_source(self, source_id: SourceId) -> bool:
         return source_id in self._sources
 
+    def editor_text_matches(self, text: str) -> bool:
+        if not text.strip() and self.editor_content is None:
+            return True
+        if self.editor_content is None:
+            return False
+        return self.editor_content.text == text
+
     def update_editor_content(self, text: str, updated_at: DateTime) -> None:
         self.editor_content = EditorContent(text=text, updated_at=updated_at)
         self._record_event(FolderEditorContentUpdatedEvent(folder_id=self.id.value))
@@ -139,6 +148,12 @@ class Folder(Entity):
 
         self.editor_content = None
         self._record_event(FolderEditorContentUpdatedEvent(folder_id=self.id.value))
+
+    def delete(self) -> None:
+        if self.is_deleted:
+            return
+        self.is_deleted = True
+        self._record_event(FolderDeletedEvent(folder_id=self.id.value))
 
     @classmethod
     def create(  # noqa: PLR0913
@@ -156,4 +171,5 @@ class Folder(Entity):
             owner_id=owner_id,
             assistant_id=assistant_id,
             created_at=created_at,
+            is_deleted=False,
         )

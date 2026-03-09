@@ -59,6 +59,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         assert folder.is_owned_by(owner_id) is True
         assert folder.is_owned_by(UserId(uuid4())) is False
@@ -70,6 +71,7 @@ class TestFolderEntity:
             info=FolderInfo("Old", "OldDesc"),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         folder.change_info(FolderInfo("New", "NewDesc"))
         assert folder.info.name == "New"
@@ -85,6 +87,7 @@ class TestFolderEntity:
             info=info,
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         folder.change_info(info)
         assert len(folder.events) == 0
@@ -96,6 +99,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         asst_id = AssistantId(uuid4())
         folder.change_assistant(asst_id)
@@ -111,6 +115,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=asst_id,
             created_at=_now(),
+            is_deleted=False,
         )
         folder.remove_assistant()
         assert folder.assistant_id is None
@@ -125,6 +130,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         folder.remove_assistant()
         assert len(folder.events) == 0
@@ -136,6 +142,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         chat_id = ChatId(uuid4())
         folder.add_chat(chat_id)
@@ -150,6 +157,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         chat_id = ChatId(uuid4())
         folder.add_chat(chat_id)
@@ -164,6 +172,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         folder._chats.add(chat_id)
         folder.remove_chat(chat_id)
@@ -178,6 +187,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         source_id = SourceId(uuid4())
         folder.add_source(source_id)
@@ -193,6 +203,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         folder._sources.add(source_id)
         folder.remove_source(source_id)
@@ -207,6 +218,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         updated_at = _now()
         folder.update_editor_content("# Hello", updated_at)
@@ -224,6 +236,7 @@ class TestFolderEntity:
             assistant_id=None,
             created_at=_now(),
             editor_content=EditorContent(text="x", updated_at=_now()),
+            is_deleted=False,
         )
         folder.clear_editor_content()
         assert folder.editor_content is None
@@ -237,6 +250,7 @@ class TestFolderEntity:
             info=FolderInfo("F", None),
             assistant_id=None,
             created_at=_now(),
+            is_deleted=False,
         )
         folder.clear_editor_content()
         assert len(folder.events) == 0

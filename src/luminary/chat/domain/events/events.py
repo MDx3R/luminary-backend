@@ -42,6 +42,11 @@ class ChatAssistantChangedEvent(ChatEvent):
     assistant_id: UUID | None
 
 
+@dataclass(frozen=True)
+class ChatDeletedEvent(ChatEvent):
+    pass
+
+
 # Message events (message aggregate, chat_id for context)
 @dataclass(frozen=True)
 class MessageEvent(DomainEvent):

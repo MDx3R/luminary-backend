@@ -19,6 +19,18 @@ from sqlalchemy.ext.asyncio import (
 )
 from testcontainers.postgres import PostgresContainer
 
+from luminary.assistant.infrastructure.database.postgres.sqlalchemy.models.assistant_base import (
+    AssistantBase,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
+    ChatBase,
+    ChatSourceAssociation,
+)
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
+    FolderBase,
+    FolderChatAssociation,
+    FolderSourceAssociation,
+)
 from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
     FileSourceBase,
     LinkSourceBase,
@@ -35,6 +47,12 @@ __models__: list[type[Base]] = [
     FileSourceBase,
     LinkSourceBase,
     PageSourceBase,
+    AssistantBase,
+    ChatBase,
+    ChatSourceAssociation,
+    FolderBase,
+    FolderChatAssociation,
+    FolderSourceAssociation,
 ]
 
 

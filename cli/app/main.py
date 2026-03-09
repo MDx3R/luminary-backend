@@ -22,7 +22,85 @@ from llama_index.vector_stores.qdrant import QdrantVectorStore
 from luminary_files.application.interfaces.services.file_service import IFileService
 from luminary_files.infrastructure.di.container import FileContainer
 
+from luminary.assistant.application.interfaces.usecases.command.create_assistant_use_case import (
+    ICreateAssistantUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.command.delete_assistant_use_case import (
+    IDeleteAssistantUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.command.update_assistant_info_use_case import (
+    IUpdateAssistantInfoUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.command.update_assistant_instructions_use_case import (
+    IUpdateAssistantInstructionsUseCase,
+)
+from luminary.assistant.infrastructure.di.container import AssistantContainer
+from luminary.assistant.presentation.http.fastapi.controllers import (
+    command_router as assistant_command_router,
+)
+from luminary.chat.application.interfaces.usecases.command.add_source_to_chat_use_case import (
+    IAddSourceToChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.change_chat_assistant_use_case import (
+    IChangeChatAssistantUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.create_chat_use_case import (
+    ICreateChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.delete_chat_use_case import (
+    IDeleteChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.remove_chat_assistant_use_case import (
+    IRemoveChatAssistantUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.remove_source_from_chat_use_case import (
+    IRemoveSourceFromChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_case import (
+    IUpdateChatNameUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.update_chat_settings_use_case import (
+    IUpdateChatSettingsUseCase,
+)
+from luminary.chat.infrastructure.di.container import ChatContainer
+from luminary.chat.presentation.http.fastapi.controllers import (
+    command_router as chat_command_router,
+)
 from luminary.content.infrastructure.di.container import ContentContainer
+from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
+    IAddSourceToFolderUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.change_folder_assistant_use_case import (
+    IChangeFolderAssistantUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.create_folder_chat_use_case import (
+    ICreateFolderChatUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.create_folder_use_case import (
+    ICreateFolderUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.delete_folder_use_case import (
+    IDeleteFolderUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.remove_chat_from_folder_use_case import (
+    IRemoveChatFromFolderUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.remove_folder_assistant_use_case import (
+    IRemoveFolderAssistantUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.remove_source_from_folder_use_case import (
+    IRemoveSourceFromFolderUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.update_editor_content_use_case import (
+    IUpdateEditorContentUseCase,
+)
+from luminary.folder.application.interfaces.usecases.command.update_folder_info_use_case import (
+    IUpdateFolderInfoUseCase,
+)
+from luminary.folder.infrastructure.di.container import FolderContainer
+from luminary.folder.presentation.http.fastapi.controllers import (
+    command_router as folder_command_router,
+)
 from luminary.model.infrastructure.di.container import ModelContainer
 from luminary.model.infrastructure.services.llama_index.client import MappedOpenAI
 from luminary.source.application.interfaces.usecases.command.create_source_use_case import (
@@ -49,7 +127,7 @@ logger.info("logger initialized")
 log_config(logger, config)
 
 
-def main() -> FastAPI:
+def main() -> FastAPI:  # noqa: PLR0915
     """Initialize and bootstrap the application.
 
     Returns:
@@ -169,6 +247,32 @@ def main() -> FastAPI:
         content_service=content_service,
     )
 
+    assistant_container = AssistantContainer(
+        clock=clock,
+        uuid_generator=uuid_generator,
+        query_executor=query_executor,
+        unit_of_work=unit_of_work,
+        event_bus=event_bus,
+    )
+
+    chat_container = ChatContainer(
+        clock=clock,
+        uuid_generator=uuid_generator,
+        query_executor=query_executor,
+        unit_of_work=unit_of_work,
+        event_bus=event_bus,
+    )
+
+    folder_container = FolderContainer(
+        clock=clock,
+        uuid_generator=uuid_generator,
+        query_executor=query_executor,
+        unit_of_work=unit_of_work,
+        event_bus=event_bus,
+        chat_factory=chat_container.chat_factory(),
+        chat_repository=chat_container.event_bus_chat_repository(),
+    )
+
     # Register routes
     server.dependency_overrides[IFileService] = lambda: file_container.file_service()
     server.dependency_overrides[ICreateFileSourceUseCase] = (
@@ -181,6 +285,75 @@ def main() -> FastAPI:
         lambda: source_container.create_link_source_use_case()
     )
 
+    server.dependency_overrides[ICreateAssistantUseCase] = (
+        lambda: assistant_container.create_assistant_use_case()
+    )
+    server.dependency_overrides[IUpdateAssistantInfoUseCase] = (
+        lambda: assistant_container.update_assistant_info_use_case()
+    )
+    server.dependency_overrides[IUpdateAssistantInstructionsUseCase] = (
+        lambda: assistant_container.update_assistant_instructions_use_case()
+    )
+    server.dependency_overrides[IDeleteAssistantUseCase] = (
+        lambda: assistant_container.delete_assistant_use_case()
+    )
+
+    server.dependency_overrides[ICreateChatUseCase] = (
+        lambda: chat_container.create_chat_use_case()
+    )
+    server.dependency_overrides[IUpdateChatNameUseCase] = (
+        lambda: chat_container.update_chat_name_use_case()
+    )
+    server.dependency_overrides[IUpdateChatSettingsUseCase] = (
+        lambda: chat_container.update_chat_settings_use_case()
+    )
+    server.dependency_overrides[IChangeChatAssistantUseCase] = (
+        lambda: chat_container.change_chat_assistant_use_case()
+    )
+    server.dependency_overrides[IRemoveChatAssistantUseCase] = (
+        lambda: chat_container.remove_chat_assistant_use_case()
+    )
+    server.dependency_overrides[IAddSourceToChatUseCase] = (
+        lambda: chat_container.add_source_to_chat_use_case()
+    )
+    server.dependency_overrides[IRemoveSourceFromChatUseCase] = (
+        lambda: chat_container.remove_source_from_chat_use_case()
+    )
+    server.dependency_overrides[IDeleteChatUseCase] = (
+        lambda: chat_container.delete_chat_use_case()
+    )
+
+    server.dependency_overrides[ICreateFolderUseCase] = (
+        lambda: folder_container.create_folder_use_case()
+    )
+    server.dependency_overrides[IUpdateFolderInfoUseCase] = (
+        lambda: folder_container.update_folder_info_use_case()
+    )
+    server.dependency_overrides[IDeleteFolderUseCase] = (
+        lambda: folder_container.delete_folder_use_case()
+    )
+    server.dependency_overrides[IChangeFolderAssistantUseCase] = (
+        lambda: folder_container.change_folder_assistant_use_case()
+    )
+    server.dependency_overrides[IRemoveFolderAssistantUseCase] = (
+        lambda: folder_container.remove_folder_assistant_use_case()
+    )
+    server.dependency_overrides[IAddSourceToFolderUseCase] = (
+        lambda: folder_container.add_source_to_folder_use_case()
+    )
+    server.dependency_overrides[IRemoveSourceFromFolderUseCase] = (
+        lambda: folder_container.remove_source_from_folder_use_case()
+    )
+    server.dependency_overrides[ICreateFolderChatUseCase] = (
+        lambda: folder_container.create_folder_chat_use_case()
+    )
+    server.dependency_overrides[IRemoveChatFromFolderUseCase] = (
+        lambda: folder_container.remove_chat_from_folder_use_case()
+    )
+    server.dependency_overrides[IUpdateEditorContentUseCase] = (
+        lambda: folder_container.update_editor_content_use_case()
+    )
+
     server.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -191,6 +364,9 @@ def main() -> FastAPI:
 
     router = APIRouter()
     router.include_router(source_command_router, prefix="/sources")
+    router.include_router(assistant_command_router, prefix="/assistants")
+    router.include_router(chat_command_router, prefix="/chats")
+    router.include_router(folder_command_router, prefix="/folders")
 
     server.include_router(router, prefix="/api/v1")
 

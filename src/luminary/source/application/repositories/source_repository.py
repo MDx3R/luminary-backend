@@ -27,6 +27,3 @@ class EventBusSourceRepository(ISourceRepository):
         async with self.uow:
             await self.repository.save(entity)
             await self.event_bus.publish_all(entity.events)
-
-    async def remove(self, entity: Source) -> None:
-        await self.repository.remove(entity)
