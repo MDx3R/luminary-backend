@@ -7,6 +7,12 @@ from bootstrap.utils import log_config
 from common.infrastructure.database.sqlalchemy.database import Database
 from common.infrastructure.database.sqlalchemy.models.base import Base
 from common.infrastructure.logger.logging.logger_factory import LoggerFactory
+from idp.auth.infrastructure.database.postgres.sqlalchemy.models.token_base import (
+    TokenBase,
+)
+from idp.identity.infrastructure.database.postgres.sqlalchemy.models.identity_base import (
+    IdentityBase,
+)
 from luminary_files.infrastructure.database.postgres.sqlalchemy.models.file_base import (
     FileBase,
 )
@@ -46,6 +52,8 @@ __models__: list[type[Base]] = [
     ChatBase,
     MessageBase,
     AttachmentBase,
+    IdentityBase,
+    TokenBase,
 ]
 
 # this is the Alembic Config object, which provides
