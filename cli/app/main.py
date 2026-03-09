@@ -15,7 +15,6 @@ from common.infrastructure.storage.minio.client import MinioStorage
 from common.infrastructure.storage.qdrant.client import QdrantStore
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from filetype.types import document
 from llama_index.core import Settings, VectorStoreIndex
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -117,6 +116,35 @@ from luminary.source.presentation.http.fastapi.controllers import (
 FILES_BUCKET = "files"
 CONTENT_BUCKET = "content"
 
+FORBIDDEN_MIME_TYPES = [
+    # Video
+    "video/*",
+    # Audio
+    "audio/*",
+    # Fonts
+    "font/*",
+    # Archives and compressed
+    "application/zip",
+    "application/x-tar",
+    "application/gzip",
+    "application/x-7z-compressed",
+    "application/x-rar-compressed",
+    "application/x-bzip2",
+    "application/x-xz",
+    # Executables and scripts
+    "application/x-msdownload",
+    "application/x-dosexec",
+    "application/x-sh",
+    # JavaScript & other code
+    "*/javascript"
+    # Installers and packages
+    "application/x-apple-diskimage",
+    "application/x-ms-installer",
+    "application/x-deb",
+    "application/x-rpm",
+]
+
+
 # Load configuration
 config = AppConfig.load()
 
@@ -214,7 +242,7 @@ def main() -> FastAPI:  # noqa: PLR0915
         uuid_generator=uuid_generator,
         query_executor=query_executor,
         storage=storage.get_client(),
-        allowed_mime_types={"text/plain", "text/markdown", document.Docx.MIME},
+        blacklisted_mime_types=FORBIDDEN_MIME_TYPES,
     )
 
     file_type_introspector = file_container.file_type_introspector

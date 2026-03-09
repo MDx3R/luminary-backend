@@ -61,7 +61,7 @@ class ChatCommandController:
     remove_source_from_chat_use_case: IRemoveSourceFromChatUseCase = Depends()
     delete_chat_use_case: IDeleteChatUseCase = Depends()
 
-    @command_router.post("", status_code=status.HTTP_201_CREATED)
+    @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
         self,
         request: Annotated[CreateChatRequest, Depends()],

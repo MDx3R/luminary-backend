@@ -5,7 +5,9 @@ from typing import Any
 from dependency_injector import containers, providers
 from luminary_files.application.services.file_service import FileService
 from luminary_files.domain.factories.file_factory import FileFactory
-from luminary_files.domain.policies.extenstion_policy import MIMEWhitelistPolicy
+from luminary_files.domain.policies.extenstion_policy import (
+    MIMEBlacklistPolicy,
+)
 from luminary_files.infrastructure.database.postgres.sqlalchemy.repositories.file_repository import (
     FileRepository,
 )
@@ -30,10 +32,12 @@ class FileContainer(containers.DeclarativeContainer):
 
     storage: providers.Dependency[Any] = providers.Dependency()
 
-    allowed_mime_types: providers.Dependency[Any] = providers.Dependency()
+    blacklisted_mime_types: providers.Dependency[Any] = providers.Dependency()
 
     # Domain services
-    mime_policy = providers.Singleton(MIMEWhitelistPolicy, allowed=allowed_mime_types)
+    mime_policy = providers.Singleton(
+        MIMEBlacklistPolicy, forbidden_patterns=blacklisted_mime_types
+    )
     file_factory = providers.Singleton(
         FileFactory, clock=clock, uuid_generator=uuid_generator, mime_policy=mime_policy
     )

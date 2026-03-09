@@ -13,8 +13,23 @@ from luminary_files.infrastructure.database.postgres.sqlalchemy.models.file_base
 from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from luminary.assistant.infrastructure.database.postgres.sqlalchemy.models.assistant_base import (
+    AssistantBase,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.attachment_base import (
+    AttachmentBase,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
+    ChatBase,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.message_base import (
+    MessageBase,
+)
 from luminary.content.infrastructure.database.postgres.sqlalchemy.models.content_base import (
     ContentBase,
+)
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
+    FolderBase,
 )
 from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
     SourceBase,
@@ -22,7 +37,16 @@ from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_b
 
 
 # Needed for proper database configuration, e.g. fkeys and tables
-__models__: list[type[Base]] = [SourceBase, ContentBase, FileBase]
+__models__: list[type[Base]] = [
+    SourceBase,
+    ContentBase,
+    FileBase,
+    AssistantBase,
+    FolderBase,
+    ChatBase,
+    MessageBase,
+    AttachmentBase,
+]
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

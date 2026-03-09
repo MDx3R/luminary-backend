@@ -31,7 +31,7 @@ class SourceBase(Base):
     def is_active(self) -> bool:
         return not self.is_deleted
 
-    @is_active.inplace.expression
+    @is_active.expression
     @classmethod
     def _is_active(cls) -> ColumnElement[bool]:
         return cls.is_deleted.is_not(True)

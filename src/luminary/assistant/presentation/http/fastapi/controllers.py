@@ -41,9 +41,7 @@ class AssistantCommandController:
     )
     delete_assistant_use_case: IDeleteAssistantUseCase = Depends()
 
-    @command_router.post(
-        "", dependencies=[], status_code=status.HTTP_201_CREATED
-    )
+    @command_router.post("/", dependencies=[], status_code=status.HTTP_201_CREATED)
     async def create(
         self,
         request: Annotated[CreateAssistantRequest, Depends()],

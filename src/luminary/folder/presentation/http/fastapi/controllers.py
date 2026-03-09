@@ -67,14 +67,12 @@ class FolderCommandController:
     change_folder_assistant_use_case: IChangeFolderAssistantUseCase = Depends()
     remove_folder_assistant_use_case: IRemoveFolderAssistantUseCase = Depends()
     add_source_to_folder_use_case: IAddSourceToFolderUseCase = Depends()
-    remove_source_from_folder_use_case: IRemoveSourceFromFolderUseCase = (
-        Depends()
-    )
+    remove_source_from_folder_use_case: IRemoveSourceFromFolderUseCase = Depends()
     create_folder_chat_use_case: ICreateFolderChatUseCase = Depends()
     remove_chat_from_folder_use_case: IRemoveChatFromFolderUseCase = Depends()
     update_editor_content_use_case: IUpdateEditorContentUseCase = Depends()
 
-    @command_router.post("", status_code=status.HTTP_201_CREATED)
+    @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
         self,
         request: Annotated[CreateFolderRequest, Depends()],
@@ -150,9 +148,7 @@ class FolderCommandController:
         descriptor: Annotated[UUID, Depends(get_descriptor)],
     ) -> None:
         await self.remove_folder_assistant_use_case.execute(
-            RemoveFolderAssistantCommand(
-                user_id=descriptor, folder_id=folder_id
-            )
+            RemoveFolderAssistantCommand(user_id=descriptor, folder_id=folder_id)
         )
 
     @command_router.post(
