@@ -26,6 +26,9 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base 
     ChatBase,
     ChatSourceAssociation,
 )
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.message_base import (
+    MessageBase,
+)
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.models.folder_base import (
     FolderBase,
     FolderChatAssociation,
@@ -50,6 +53,7 @@ __models__: list[type[Base]] = [
     AssistantBase,
     ChatBase,
     ChatSourceAssociation,
+    MessageBase,
     FolderBase,
     FolderChatAssociation,
     FolderSourceAssociation,

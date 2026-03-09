@@ -4,31 +4,16 @@ from luminary.chat.domain.entity.attachment import Attachment
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.message_id import MessageId
-from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.attachment_base import (
-    AttachmentBase,
-)
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.message_base import (
     MessageBase,
 )
 from luminary.model.domain.entity.model import ModelId
-from luminary.source.domain.entity.source import SourceId
 
 
 class MessageMapper:
     @classmethod
-    def to_domain(
-        cls,
-        base: MessageBase,
-        attachments: list[AttachmentBase] | None = None,
-    ) -> Message:
-        atts = [
-            Attachment(
-                name=a.name,
-                content_id=a.content_id,
-                source_id=SourceId(a.source_id) if a.source_id else None,
-            )
-            for a in (attachments or [])
-        ]
+    def to_domain(cls, base: MessageBase) -> Message:
+        atts = []
         return Message(
             id=MessageId(base.message_id),
             chat_id=ChatId(base.chat_id),
@@ -39,7 +24,7 @@ class MessageMapper:
             edited_at=DateTime(base.edited_at),
             created_at=DateTime(base.created_at),
             tokens=base.tokens,
-            _attachments=set(atts),
+            _attachments=set[Attachment](atts),
         )
 
     @classmethod

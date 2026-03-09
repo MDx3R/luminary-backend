@@ -40,6 +40,9 @@ from luminary.assistant.presentation.http.fastapi.controllers import (
 from luminary.chat.application.interfaces.usecases.command.add_source_to_chat_use_case import (
     IAddSourceToChatUseCase,
 )
+from luminary.chat.application.interfaces.usecases.command.cancel_message_use_case import (
+    ICancelMessageUseCase,
+)
 from luminary.chat.application.interfaces.usecases.command.change_chat_assistant_use_case import (
     IChangeChatAssistantUseCase,
 )
@@ -49,11 +52,17 @@ from luminary.chat.application.interfaces.usecases.command.create_chat_use_case 
 from luminary.chat.application.interfaces.usecases.command.delete_chat_use_case import (
     IDeleteChatUseCase,
 )
+from luminary.chat.application.interfaces.usecases.command.get_message_response_use_case import (
+    IGetStreamingMessageResponseUseCase,
+)
 from luminary.chat.application.interfaces.usecases.command.remove_chat_assistant_use_case import (
     IRemoveChatAssistantUseCase,
 )
 from luminary.chat.application.interfaces.usecases.command.remove_source_from_chat_use_case import (
     IRemoveSourceFromChatUseCase,
+)
+from luminary.chat.application.interfaces.usecases.command.send_message_use_case import (
+    ISendMessageUseCase,
 )
 from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_case import (
     IUpdateChatNameUseCase,
@@ -266,6 +275,7 @@ def main() -> FastAPI:  # noqa: PLR0915
     model_container = ModelContainer(
         vector_store_index=vector_store_index,
         embed_model=embed_model,
+        llm=llm,
         file_type_introspector=file_type_introspector,
     )
 
@@ -294,6 +304,8 @@ def main() -> FastAPI:  # noqa: PLR0915
         query_executor=query_executor,
         unit_of_work=unit_of_work,
         event_bus=event_bus,
+        inference_engine=model_container.inference_engine(),
+        assistant_repository=assistant_container.event_bus_assistant_repository(),
     )
 
     folder_container = FolderContainer(
@@ -354,6 +366,15 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IDeleteChatUseCase] = (
         lambda: chat_container.delete_chat_use_case()
+    )
+    server.dependency_overrides[ISendMessageUseCase] = (
+        lambda: chat_container.send_message_use_case()
+    )
+    server.dependency_overrides[ICancelMessageUseCase] = (
+        lambda: chat_container.cancel_message_use_case()
+    )
+    server.dependency_overrides[IGetStreamingMessageResponseUseCase] = (
+        lambda: chat_container.get_streaming_message_response_use_case()
     )
 
     server.dependency_overrides[ICreateFolderUseCase] = (

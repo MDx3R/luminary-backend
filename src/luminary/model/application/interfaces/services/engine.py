@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from uuid import UUID
@@ -29,6 +29,6 @@ class IInferenceEngine(ABC):
         query: str,
         *,
         system_prompt: str,
-        source_ids: list[UUID],
-        history: list[MessageDTO],
+        source_ids: Sequence[UUID],
+        history: Sequence[MessageDTO],
     ) -> AsyncGenerator[EngineStreamingResponse, None]: ...

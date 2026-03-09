@@ -25,3 +25,7 @@ class ChangeChatAssistantRequest(BaseModel):
 
 class AddSourceToChatRequest(BaseModel):
     source_id: UUID
+
+
+class SendMessageRequest(BaseModel):
+    content: str

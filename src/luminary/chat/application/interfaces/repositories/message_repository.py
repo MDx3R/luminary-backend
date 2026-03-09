@@ -15,6 +15,3 @@ class IMessageRepository(ABC):
 
     @abstractmethod
     async def save(self, entity: Message) -> None: ...
-
-    @abstractmethod
-    async def remove(self, entity: Message) -> None: ...
