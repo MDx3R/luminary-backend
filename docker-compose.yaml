@@ -65,6 +65,22 @@ services:
       timeout: 5s
       retries: 5
 
+  migrations:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.migrations
+    env_file:
+      - .env
+    # NOTE: environment overrides env_file with proper DB_PORT and DB_HOST
+    # regardless of launch env (i.e. local, dev or prod and etc.)
+    environment:
+      DB_PORT: 5432
+      DB_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["poetry", "run", "alembic", "upgrade", "head"]
+
   app:
     build:
       context: .
@@ -72,6 +88,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      migrations:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       rabbitmq:

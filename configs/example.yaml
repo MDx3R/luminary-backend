@@ -23,8 +23,8 @@ deploy:
 
 s3:
   endpoint_url: "localhost:9000"
-  access_key: "minio"
-  secret_key: "minio"
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
   bucket_name: "luminary"
 
 rabbit:
