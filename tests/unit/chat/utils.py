@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus

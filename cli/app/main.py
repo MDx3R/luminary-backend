@@ -151,10 +151,8 @@ def main() -> FastAPI:
     )
 
     content_service = content_container.content_service
-    content_storage = content_container.content_storage
 
     model_container = ModelContainer(
-        content_storage=content_storage,
         vector_store_index=vector_store_index,
         embed_model=embed_model,
         file_type_introspector=file_type_introspector,

@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.folder.domain.entity.folder import Folder
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo

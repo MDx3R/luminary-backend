@@ -19,8 +19,6 @@ class ModelContainer(containers.DeclarativeContainer):
 
     # Explicit dependency declarations
 
-    content_storage: providers.Dependency[Any] = providers.Dependency()
-
     vector_store_index: providers.Dependency[Any] = providers.Dependency()
     embed_model: providers.Dependency[Any] = providers.Dependency()
 
@@ -39,6 +37,4 @@ class ModelContainer(containers.DeclarativeContainer):
         reader=UnstructuredReader(),
         file_introspector=file_type_introspector,
     )
-    embedding_service = providers.Singleton(
-        EmbeddingService, content_storage=content_storage, vector_store=vector_store
-    )
+    embedding_service = providers.Singleton(EmbeddingService, vector_store=vector_store)

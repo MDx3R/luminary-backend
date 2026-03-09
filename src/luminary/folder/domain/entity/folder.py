@@ -5,16 +5,18 @@ from common.domain.interfaces.entity import Entity
 from common.domain.value_objects.datetime import DateTime
 from common.domain.value_objects.id import UserId
 
-from luminary.assistant.domain.entity.assisnant import AssistantId
+from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.folder.domain.events.events import (
     FolderAssistantChangedEvent,
     FolderChatAddedEvent,
     FolderChatRemovedEvent,
+    FolderEditorContentUpdatedEvent,
     FolderInfoChangedEvent,
     FolderSourceAddedEvent,
     FolderSourceRemovedEvent,
 )
+from luminary.folder.domain.value_objects.editor_content import EditorContent
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo
 from luminary.source.domain.entity.source import SourceId
@@ -29,6 +31,7 @@ class Folder(Entity):
     created_at: DateTime
     _chats: set[ChatId] = field(default_factory=set[ChatId])
     _sources: set[SourceId] = field(default_factory=set[SourceId])
+    editor_content: EditorContent | None = None
 
     @property
     def chats(self) -> frozenset[ChatId]:
@@ -73,7 +76,7 @@ class Folder(Entity):
         )
 
     def remove_assistant(self) -> None:
-        if not self.assistant_matches(None):
+        if self.assistant_matches(None):
             return
 
         self.assistant_id = None
@@ -125,6 +128,17 @@ class Folder(Entity):
 
     def has_source(self, source_id: SourceId) -> bool:
         return source_id in self._sources
+
+    def update_editor_content(self, text: str, updated_at: DateTime) -> None:
+        self.editor_content = EditorContent(text=text, updated_at=updated_at)
+        self._record_event(FolderEditorContentUpdatedEvent(folder_id=self.id.value))
+
+    def clear_editor_content(self) -> None:
+        if self.editor_content is None:
+            return
+
+        self.editor_content = None
+        self._record_event(FolderEditorContentUpdatedEvent(folder_id=self.id.value))
 
     @classmethod
     def create(  # noqa: PLR0913
