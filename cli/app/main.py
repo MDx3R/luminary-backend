@@ -227,7 +227,12 @@ def main() -> FastAPI:  # noqa: PLR0915
 
     # Bootstrap common container with config and database
     common_container = CommonContainer(
-        config=config, logger=logger, database=database, storage=storage, broker=broker
+        config=config,
+        logger=logger,
+        database=database,
+        storage=storage,
+        broker=broker,
+        queue_name=config.rabbit.queue_name,
     )
 
     uuid_generator = common_container.uuid_generator

@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 
 class RabbitMQConfig(BaseModel):
+    queue_name: str
     rabbit_host: str
     rabbit_port: int
     rabbit_user: str

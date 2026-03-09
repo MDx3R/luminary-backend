@@ -21,6 +21,8 @@ class CommonContainer(containers.DeclarativeContainer):
     storage: providers.Dependency[Any] = providers.Dependency()
     broker: providers.Dependency[Any] = providers.Dependency()
 
+    queue_name: providers.Dependency[Any] = providers.Dependency()
+
     clock = providers.Singleton(SystemClock)
     uuid_generator = providers.Singleton(UUID4Generator)
     token_generator = providers.Singleton(SecretsTokenGenerator)
@@ -33,5 +35,5 @@ class CommonContainer(containers.DeclarativeContainer):
         FastStreamRabbitMQEventBus,
         broker=broker,
         uuid_generator=uuid_generator,
-        prefix="luminary.events",
+        prefix=queue_name,
     )
