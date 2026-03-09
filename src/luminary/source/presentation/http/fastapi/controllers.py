@@ -1,10 +1,10 @@
 from typing import Annotated
-from uuid import UUID
 
 from common.presentation.http.dto.response import IDResponse
-from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, UploadFile, status
+from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
+from idp.identity.presentation.http.fastapi.auth import get_descriptor
 from luminary_files.application.interfaces.services.file_service import (
     IFileService,
     UploadFileCommand,
@@ -40,16 +40,18 @@ class SourceCommandController:
         self,
         file: UploadFile,
         request: Annotated[CreateFileSourceRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         file_id = await self.file_service.upload_file(
             UploadFileCommand(
-                user_id=descriptor, filename=file.filename or "file", content=file.file
+                user_id=descriptor.identity_id,
+                filename=file.filename or "file",
+                content=file.file,
             )
         )
         source_id = await self.create_file_source_use_case.execute(
             CreateFileSourceCommand(
-                user_id=descriptor, title=request.title, file_id=file_id
+                user_id=descriptor.identity_id, title=request.title, file_id=file_id
             )
         )
 
@@ -60,11 +62,11 @@ class SourceCommandController:
         self,
         page: UploadFile,
         request: Annotated[CreatePageSourceRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         source_id = await self.create_page_source_use_case.execute(
             CreatePageSourceCommand(
-                user_id=descriptor, title=request.title, data=page.file
+                user_id=descriptor.identity_id, title=request.title, data=page.file
             )
         )
 
@@ -74,11 +76,11 @@ class SourceCommandController:
     async def create_link(
         self,
         request: Annotated[CreateLinkSourceRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         source_id = await self.create_link_source_use_case.execute(
             CreateLinkSourceCommand(
-                user_id=descriptor, title=request.title, url=request.url
+                user_id=descriptor.identity_id, title=request.title, url=request.url
             )
         )
 

@@ -2,9 +2,10 @@ from typing import Annotated
 from uuid import UUID
 
 from common.presentation.http.dto.response import IDResponse
-from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, status
+from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
+from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
 from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
     AddSourceToFolderCommand,
@@ -76,11 +77,11 @@ class FolderCommandController:
     async def create(
         self,
         request: Annotated[CreateFolderRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         folder_id = await self.create_folder_use_case.execute(
             CreateFolderCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 name=request.name,
                 description=request.description,
                 assistant_id=request.assistant_id,
@@ -96,11 +97,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         request: Annotated[UpdateFolderInfoRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_folder_info_use_case.execute(
             UpdateFolderInfoCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 name=request.name,
                 description=request.description,
@@ -114,10 +115,10 @@ class FolderCommandController:
     async def delete(
         self,
         folder_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.delete_folder_use_case.execute(
-            DeleteFolderCommand(user_id=descriptor, folder_id=folder_id)
+            DeleteFolderCommand(user_id=descriptor.identity_id, folder_id=folder_id)
         )
 
     @command_router.put(
@@ -128,11 +129,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         request: Annotated[ChangeFolderAssistantRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.change_folder_assistant_use_case.execute(
             ChangeFolderAssistantCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 assistant_id=request.assistant_id,
             )
@@ -145,10 +146,12 @@ class FolderCommandController:
     async def remove_assistant(
         self,
         folder_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.remove_folder_assistant_use_case.execute(
-            RemoveFolderAssistantCommand(user_id=descriptor, folder_id=folder_id)
+            RemoveFolderAssistantCommand(
+                user_id=descriptor.identity_id, folder_id=folder_id
+            )
         )
 
     @command_router.post(
@@ -159,11 +162,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         request: Annotated[AddSourceToFolderRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.add_source_to_folder_use_case.execute(
             AddSourceToFolderCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 source_id=request.source_id,
             )
@@ -177,11 +180,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         source_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.remove_source_from_folder_use_case.execute(
             RemoveSourceFromFolderCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 source_id=source_id,
             )
@@ -192,11 +195,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         request: Annotated[CreateFolderChatRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         chat_id = await self.create_folder_chat_use_case.execute(
             CreateFolderChatCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 name=request.name,
                 assistant_id=request.assistant_id,
@@ -214,11 +217,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         chat_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.remove_chat_from_folder_use_case.execute(
             RemoveChatFromFolderCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 chat_id=chat_id,
             )
@@ -232,11 +235,11 @@ class FolderCommandController:
         self,
         folder_id: UUID,
         request: Annotated[UpdateEditorContentRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_editor_content_use_case.execute(
             UpdateEditorContentCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=folder_id,
                 text=request.text,
             )

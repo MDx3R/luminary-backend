@@ -2,9 +2,10 @@ from typing import Annotated
 from uuid import UUID
 
 from common.presentation.http.dto.response import IDResponse
-from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, status
+from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
+from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
 from luminary.assistant.application.interfaces.usecases.command.create_assistant_use_case import (
     CreateAssistantCommand,
@@ -45,11 +46,11 @@ class AssistantCommandController:
     async def create(
         self,
         request: Annotated[CreateAssistantRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         assistant_id = await self.create_assistant_use_case.execute(
             CreateAssistantCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 name=request.name,
                 description=request.description,
                 prompt=request.prompt,
@@ -65,11 +66,11 @@ class AssistantCommandController:
         self,
         assistant_id: UUID,
         request: Annotated[UpdateAssistantInfoRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_assistant_info_use_case.execute(
             UpdateAssistantInfoCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 assistant_id=assistant_id,
                 name=request.name,
                 description=request.description,
@@ -84,11 +85,11 @@ class AssistantCommandController:
         self,
         assistant_id: UUID,
         request: Annotated[UpdateAssistantInstructionsRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_assistant_instructions_use_case.execute(
             UpdateAssistantInstructionsCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 assistant_id=assistant_id,
                 prompt=request.prompt,
             )
@@ -101,11 +102,11 @@ class AssistantCommandController:
     async def delete(
         self,
         assistant_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.delete_assistant_use_case.execute(
             DeleteAssistantCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 assistant_id=assistant_id,
             )
         )

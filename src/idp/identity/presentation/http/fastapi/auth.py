@@ -54,10 +54,4 @@ async def get_descriptor(
     token: Annotated[str, Depends(oauth2_scheme)],
     token_introspector: Annotated[ITokenIntrospector, Depends()],
 ) -> IdentityDescriptor:
-    if hasattr(request.state, "user"):
-        user: IdentityDescriptor = request.state.user
-        return user
-
-    user = await token_introspector.extract_user(token)
-    request.state.user = user
-    return user
+    return await token_introspector.extract_user(token)

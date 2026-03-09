@@ -3,10 +3,11 @@ from typing import Annotated
 from uuid import UUID
 
 from common.presentation.http.dto.response import IDResponse
-from common.presentation.http.fastapi.auth import get_descriptor
 from common.presentation.http.fastapi.cbv import cbv
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
+from idp.identity.domain.value_objects.descriptor import IdentityDescriptor
+from idp.identity.presentation.http.fastapi.auth import get_descriptor
 
 from luminary.chat.application.interfaces.usecases.command.add_source_to_chat_use_case import (
     AddSourceToChatCommand,
@@ -84,11 +85,11 @@ class ChatCommandController:
     async def create(
         self,
         request: Annotated[CreateChatRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         chat_id = await self.create_chat_use_case.execute(
             CreateChatCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 folder_id=None,
                 name=request.name,
                 assistant_id=request.assistant_id,
@@ -106,11 +107,11 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         request: Annotated[UpdateChatNameRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_chat_name_use_case.execute(
             UpdateChatNameCommand(
-                user_id=descriptor, chat_id=chat_id, name=request.name
+                user_id=descriptor.identity_id, chat_id=chat_id, name=request.name
             )
         )
 
@@ -122,11 +123,11 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         request: Annotated[UpdateChatSettingsRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_chat_settings_use_case.execute(
             UpdateChatSettingsCommand(
-                user_id=descriptor,
+                user_id=descriptor.identity_id,
                 chat_id=chat_id,
                 model_id=request.model_id,
                 max_context_messages=request.max_context_messages,
@@ -141,11 +142,13 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         request: Annotated[ChangeChatAssistantRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.change_chat_assistant_use_case.execute(
             ChangeChatAssistantCommand(
-                user_id=descriptor, chat_id=chat_id, assistant_id=request.assistant_id
+                user_id=descriptor.identity_id,
+                chat_id=chat_id,
+                assistant_id=request.assistant_id,
             )
         )
 
@@ -156,10 +159,10 @@ class ChatCommandController:
     async def remove_assistant(
         self,
         chat_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.remove_chat_assistant_use_case.execute(
-            RemoveChatAssistantCommand(user_id=descriptor, chat_id=chat_id)
+            RemoveChatAssistantCommand(user_id=descriptor.identity_id, chat_id=chat_id)
         )
 
     @command_router.post(
@@ -170,11 +173,13 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         request: Annotated[AddSourceToChatRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.add_source_to_chat_use_case.execute(
             AddSourceToChatCommand(
-                user_id=descriptor, chat_id=chat_id, source_id=request.source_id
+                user_id=descriptor.identity_id,
+                chat_id=chat_id,
+                source_id=request.source_id,
             )
         )
 
@@ -186,11 +191,11 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         source_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.remove_source_from_chat_use_case.execute(
             RemoveSourceFromChatCommand(
-                user_id=descriptor, chat_id=chat_id, source_id=source_id
+                user_id=descriptor.identity_id, chat_id=chat_id, source_id=source_id
             )
         )
 
@@ -201,10 +206,10 @@ class ChatCommandController:
     async def delete(
         self,
         chat_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.delete_chat_use_case.execute(
-            DeleteChatCommand(user_id=descriptor, chat_id=chat_id)
+            DeleteChatCommand(user_id=descriptor.identity_id, chat_id=chat_id)
         )
 
     @command_router.post(
@@ -215,11 +220,11 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         request: Annotated[SendMessageRequest, Depends()],
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         result = await self.send_message_use_case.execute(
             SendMessageCommand(
-                user_id=descriptor, chat_id=chat_id, content=request.content
+                user_id=descriptor.identity_id, chat_id=chat_id, content=request.content
             )
         )
         return IDResponse.from_uuid(result)
@@ -229,11 +234,11 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         message_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> StreamingResponse:
         stream = self.get_message_response_use_case.execute(
             GetMessageResponseCommand(
-                descriptor, chat_id=chat_id, message_id=message_id
+                descriptor.identity_id, chat_id=chat_id, message_id=message_id
             )
         )
 
@@ -251,10 +256,10 @@ class ChatCommandController:
         self,
         chat_id: UUID,
         message_id: UUID,
-        descriptor: Annotated[UUID, Depends(get_descriptor)],
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.cancel_message_use_case.execute(
             CancelMessageCommand(
-                user_id=descriptor, chat_id=chat_id, message_id=message_id
+                user_id=descriptor.identity_id, chat_id=chat_id, message_id=message_id
             )
         )
