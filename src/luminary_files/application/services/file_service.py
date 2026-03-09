@@ -25,29 +25,30 @@ from luminary_files.domain.interfaces.file_factory import IFileFactory
 
 class FileService(IFileService):
     # TODO: Use init
-    BUCKET_NAME: ClassVar[str] = "files"
     EXPIRATION_DELTA: ClassVar[timedelta] = timedelta(days=7)
 
     def __init__(
         self,
+        bucket_name: str,
         file_factory: IFileFactory,
-        file_type_instorspector: IFileTypeIntrospector,
+        file_type_introspector: IFileTypeIntrospector,
         file_repository: IFileRepository,
         file_storage: IFileStorage,
     ) -> None:
+        self.bucket_name = bucket_name
         self.file_factory = file_factory
-        self.file_type_instorspector = file_type_instorspector
+        self.file_type_introspector = file_type_introspector
         self.file_repository = file_repository
         self.file_storage = file_storage
 
     async def upload_file(self, command: UploadFileCommand) -> UUID:
         content = command.content
-        file_type = self.file_type_instorspector.extract(content)
+        file_type = self.file_type_introspector.extract(content)
 
         file = self.file_factory.create(
             user_id=UserId(command.user_id),
             filename=command.filename,
-            bucket=self.BUCKET_NAME,
+            bucket=self.bucket_name,
             mime=file_type.mime,
         )
 

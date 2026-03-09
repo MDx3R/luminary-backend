@@ -40,4 +40,4 @@ class S3Config(BaseModel):
     secret_key: str
     bucket_name: str
     region: str | None = None
-    secure: bool = True
+    secure: bool = False

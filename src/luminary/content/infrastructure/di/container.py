@@ -18,6 +18,8 @@ class ContentContainer(containers.DeclarativeContainer):
     """Dependency injection container for source bounded context."""
 
     # Explicit dependency declarations
+    bucket_name: providers.Dependency[Any] = providers.Dependency()
+
     clock: providers.Dependency[Any] = providers.Dependency()
     uuid_generator: providers.Dependency[Any] = providers.Dependency()
     query_executor: providers.Dependency[Any] = providers.Dependency()
@@ -36,12 +38,13 @@ class ContentContainer(containers.DeclarativeContainer):
 
     # Storage
     content_storage = providers.Singleton(
-        MinioContentStorage, client=storage, bucket_name=ContentService.BUCKET_NAME
+        MinioContentStorage, client=storage, bucket_name=bucket_name
     )
 
     # Services
     content_service = providers.Singleton(
         ContentService,
+        bucket_name=bucket_name,
         content_factory=content_factory,
         file_content_extractor=file_content_extractor,
         content_repository=content_repository,

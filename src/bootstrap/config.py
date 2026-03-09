@@ -26,7 +26,7 @@ class AppConfig(Settings):
                 "auth": {"secret_key", "algorithm"},
                 "llm": {"api_key"},
                 "s3": {"secret_key"},
-                "rabbit": {"password"},
+                "rabbit": {"rabbit_pass"},
                 "qdrant": {"secret_key"},
             },
         )

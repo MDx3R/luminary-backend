@@ -48,6 +48,6 @@ def get_token(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
 
 async def get_descriptor(
     request: Request,
-    token: Annotated[str, Depends(oauth2_scheme)],
+    # token: Annotated[str, Depends(oauth2_scheme)],
 ) -> uuid.UUID:
     return uuid.uuid4()

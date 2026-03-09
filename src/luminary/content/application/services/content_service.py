@@ -22,16 +22,17 @@ from luminary.content.domain.interfaces.content_factory import IContentFactory
 
 
 class ContentService(IContentService):
-    BUCKET_NAME: ClassVar[str] = "content"
     CONTENT_MIME: ClassVar[str] = "text/plain"
 
     def __init__(
         self,
+        bucket_name: str,
         content_factory: IContentFactory,
         file_content_extractor: IFileContentExtractor,
         content_repository: IContentRepository,
         content_storage: IContentStorage,
     ) -> None:
+        self.bucket_name = bucket_name
         self.content_factory = content_factory
         self.file_content_extractor = file_content_extractor
         self.content_repository = content_repository
@@ -44,7 +45,7 @@ class ContentService(IContentService):
 
         content = self.content_factory.create(
             user_id=UserId(command.user_id),
-            bucket=self.BUCKET_NAME,
+            bucket=self.bucket_name,
             mime=self.CONTENT_MIME,
             size=len(extracted_content),
         )

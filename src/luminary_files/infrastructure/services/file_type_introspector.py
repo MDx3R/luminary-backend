@@ -1,3 +1,4 @@
+import mimetypes
 from typing import BinaryIO
 
 import filetype
@@ -7,6 +8,7 @@ from luminary_files.application.exceptions import InvalidFileTypeError
 from luminary_files.application.interfaces.services.file_type_introspector import (
     IFileTypeIntrospector,
 )
+from magika import Magika
 
 
 class FileTypeIntrospector(IFileTypeIntrospector):
@@ -23,3 +25,18 @@ class FileTypeIntrospector(IFileTypeIntrospector):
             return FileType(extension="txt", mime="text/plain")
         except UnicodeDecodeError as exc:
             raise InvalidFileTypeError() from exc
+
+
+class MagikaFileTypeIntrospector(IFileTypeIntrospector):
+    def __init__(self) -> None:
+        self.magika = Magika()
+
+    def extract(self, data: BinaryIO) -> FileType:
+        data.seek(0)
+        prediction = self.magika.identify_bytes(data.read())
+        data.seek(0)
+
+        real_mime = prediction.output.mime_type
+        extension = mimetypes.guess_extension(real_mime) or ".txt"
+
+        return FileType(extension=extension.rstrip("."), mime=real_mime)

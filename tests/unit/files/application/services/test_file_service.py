@@ -63,6 +63,7 @@ class TestFileService:
         )
 
         self.service = FileService(
+            self.bucket,
             self.file_factory,
             self.file_type_introspector,
             self.file_repository,

@@ -27,12 +27,17 @@ from luminary.model.infrastructure.di.container import ModelContainer
 from luminary.model.infrastructure.services.llama_index.client import MappedOpenAI
 from luminary.source.application.interfaces.usecases.command.create_source_use_case import (
     ICreateFileSourceUseCase,
+    ICreateLinkSourceUseCase,
+    ICreatePageSourceUseCase,
 )
 from luminary.source.infrastructure.di.container import SourceContainer
 from luminary.source.presentation.http.fastapi.controllers import (
     command_router as source_command_router,
 )
 
+
+FILES_BUCKET = "files"
+CONTENT_BUCKET = "content"
 
 # Load configuration
 config = AppConfig.load()
@@ -100,10 +105,15 @@ def main() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
         logger.info("application ready to accept requests")
+        await broker.start()
+        await storage.ensure_bucket()
+        await storage.ensure_bucket(FILES_BUCKET)
+        await storage.ensure_bucket(CONTENT_BUCKET)
+
         yield
         logger.info("application shutdown begins")
-        await database.shutdown()
         await broker.stop()
+        await database.shutdown()
         await storage.shutdown()
         await qdrant_store.shutdown()
 
@@ -121,27 +131,33 @@ def main() -> FastAPI:
     event_bus = common_container.event_bus
 
     file_container = FileContainer(
+        bucket_name=FILES_BUCKET,
         clock=clock,
         uuid_generator=uuid_generator,
         query_executor=query_executor,
-        storage=storage,
+        storage=storage.get_client(),
         allowed_mime_types={"text/plain", "text/markdown", document.Docx.MIME},
     )
 
+    file_type_introspector = file_container.file_type_introspector
+
     content_container = ContentContainer(
+        bucket_name=CONTENT_BUCKET,
         clock=clock,
         uuid_generator=uuid_generator,
         query_executor=query_executor,
-        storage=storage,
+        storage=storage.get_client(),
         file_content_extractor=None,  # NOTE: Has to be overriden later
     )
 
+    content_service = content_container.content_service
     content_storage = content_container.content_storage
 
     model_container = ModelContainer(
         content_storage=content_storage,
         vector_store_index=vector_store_index,
         embed_model=embed_model,
+        file_type_introspector=file_type_introspector,
     )
 
     content_container.file_content_extractor.override(model_container.content_extractor)
@@ -152,12 +168,19 @@ def main() -> FastAPI:
         query_executor=query_executor,
         unit_of_work=unit_of_work,
         event_bus=event_bus,
+        content_service=content_service,
     )
 
     # Register routes
     server.dependency_overrides[IFileService] = lambda: file_container.file_service()
     server.dependency_overrides[ICreateFileSourceUseCase] = (
         lambda: source_container.create_file_source_use_case()
+    )
+    server.dependency_overrides[ICreatePageSourceUseCase] = (
+        lambda: source_container.create_page_source_use_case()
+    )
+    server.dependency_overrides[ICreateLinkSourceUseCase] = (
+        lambda: source_container.create_link_source_use_case()
     )
 
     server.add_middleware(
@@ -171,7 +194,7 @@ def main() -> FastAPI:
     router = APIRouter()
     router.include_router(source_command_router, prefix="/sources")
 
-    server.include_router(source_command_router, prefix="/api/v1")
+    server.include_router(router, prefix="/api/v1")
 
     return server
 

@@ -24,6 +24,8 @@ class ModelContainer(containers.DeclarativeContainer):
     vector_store_index: providers.Dependency[Any] = providers.Dependency()
     embed_model: providers.Dependency[Any] = providers.Dependency()
 
+    file_type_introspector: providers.Dependency[Any] = providers.Dependency()
+
     # Storage
     vector_store = providers.Singleton(
         LlamaIndexVectorStore,
@@ -33,7 +35,9 @@ class ModelContainer(containers.DeclarativeContainer):
 
     # Services
     content_extractor = providers.Singleton(
-        LlamaIndexFileContentExtractor, reader=UnstructuredReader()
+        LlamaIndexFileContentExtractor,
+        reader=UnstructuredReader(),
+        file_introspector=file_type_introspector,
     )
     embedding_service = providers.Singleton(
         EmbeddingService, content_storage=content_storage, vector_store=vector_store

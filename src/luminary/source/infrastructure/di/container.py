@@ -36,6 +36,8 @@ class SourceContainer(containers.DeclarativeContainer):
     unit_of_work: providers.Dependency[Any] = providers.Dependency()
     event_bus: providers.Dependency[Any] = providers.Dependency()
 
+    content_service: providers.Dependency[Any] = providers.Dependency()
+
     # Domain services
     source_factory = providers.Singleton(
         SourceFactory, clock=clock, uuid_generator=uuid_generator
@@ -56,18 +58,19 @@ class SourceContainer(containers.DeclarativeContainer):
     # Write use cases
     create_file_source_use_case = providers.Singleton(
         CreateFileSourceUseCase,
-        source_factory=event_bus_source_repository,
-        source_repository=source_repository,
+        source_factory=source_factory,
+        source_repository=event_bus_source_repository,
     )
     create_link_source_use_case = providers.Singleton(
         CreateLinkSourceUseCase,
-        source_factory=event_bus_source_repository,
-        source_repository=source_repository,
+        source_factory=source_factory,
+        source_repository=event_bus_source_repository,
     )
     create_page_source_use_case = providers.Singleton(
         CreatePageSourceUseCase,
-        source_factory=event_bus_source_repository,
-        source_repository=source_repository,
+        source_factory=source_factory,
+        source_repository=event_bus_source_repository,
+        content_service=content_service,
     )
 
     update_source_use_case = providers.Singleton(

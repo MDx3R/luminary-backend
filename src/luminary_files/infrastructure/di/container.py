@@ -10,7 +10,7 @@ from luminary_files.infrastructure.database.postgres.sqlalchemy.repositories.fil
     FileRepository,
 )
 from luminary_files.infrastructure.services.file_type_introspector import (
-    FileTypeIntrospector,
+    MagikaFileTypeIntrospector,
 )
 from luminary_files.infrastructure.storage.minio.repositories.file_storage import (
     MinioFileStorage,
@@ -21,6 +21,8 @@ class FileContainer(containers.DeclarativeContainer):
     """Dependency injection container for file bounded context."""
 
     # Explicit dependency declarations
+
+    bucket_name: providers.Dependency[Any] = providers.Dependency()
 
     clock: providers.Dependency[Any] = providers.Dependency()
     uuid_generator: providers.Dependency[Any] = providers.Dependency()
@@ -41,17 +43,18 @@ class FileContainer(containers.DeclarativeContainer):
 
     # Storage
     file_storage = providers.Singleton(
-        MinioFileStorage, client=storage, bucket_name=FileService.BUCKET_NAME
+        MinioFileStorage, client=storage, bucket_name=bucket_name
     )
 
     # Other dependencies
-    file_type_instorspector = providers.Singleton(FileTypeIntrospector)
+    file_type_introspector = providers.Singleton(MagikaFileTypeIntrospector)
 
     # Services
     file_service = providers.Singleton(
         FileService,
+        bucket_name=bucket_name,
         file_factory=file_factory,
-        file_type_instorspector=file_type_instorspector,
+        file_type_introspector=file_type_introspector,
         file_repository=file_repository,
         file_storage=file_storage,
     )

@@ -1,11 +1,13 @@
 import asyncio
 from collections.abc import Iterable
+from typing import Any
 
 from common.application.interfaces.handlers.handler import EVENT, IEventHandler
 from common.application.interfaces.services.event_bus import IEventBus
 from common.domain.events.event import Event
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 from faststream.rabbit import RabbitBroker, RabbitRoute
+from pydantic import TypeAdapter
 from pydantic.alias_generators import to_snake
 
 
@@ -20,7 +22,8 @@ class FastStreamRabbitMQEventBus(IEventBus):
     async def publish(self, event: Event) -> None:
         event = self.init_event(event)
         await self.broker.publish(  # pyright: ignore[reportUnknownMemberType]
-            message=event, queue=self.build_queue(self.prefix, type(event))
+            message=TypeAdapter[Any](type(event)).dump_python(event, mode="json"),
+            queue=self.build_queue(self.prefix, type(event)),
         )
 
     async def publish_all(self, events: Iterable[Event]) -> None:
@@ -39,7 +42,10 @@ class FastStreamRabbitMQEventBus(IEventBus):
     def build_route(
         cls, prefix: str, event_type: type[EVENT], handler: IEventHandler[EVENT]
     ) -> RabbitRoute:
-        async def wrapper(event: EVENT) -> None:
+        adapter = TypeAdapter[EVENT](event_type)
+
+        async def wrapper(message_data: dict[str, Any]) -> None:
+            event = adapter.validate_python(message_data)
             await handler.handle(event)
 
         wrapper.__annotations__["event"] = event_type

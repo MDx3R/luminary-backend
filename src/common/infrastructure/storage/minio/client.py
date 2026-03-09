@@ -33,9 +33,10 @@ class MinioStorage:
     def get_bucket_name(self) -> str:
         return self._bucket_name
 
-    def ensure_bucket(self) -> None:
-        if not self._client.bucket_exists(self._bucket_name):
-            self._client.make_bucket(self._bucket_name)
+    async def ensure_bucket(self, bucket_name: str | None = None) -> None:
+        bucket_name = bucket_name or self._bucket_name
+        if not self._client.bucket_exists(bucket_name):
+            self._client.make_bucket(bucket_name)
 
     async def shutdown(self) -> None:
         """MinIO does not maintain a persistent connection."""
