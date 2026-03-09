@@ -7,9 +7,6 @@ import pytest
 from common.domain.value_objects.id import UserId
 from common.domain.value_objects.object_key import ObjectKey
 from luminary_files.application.dtos.dtos import FileType
-from luminary_files.application.dtos.query.get_presigned_url_query import (
-    GetPresignedUrlQuery,
-)
 from luminary_files.application.interfaces.repositories.file_repository import (
     IFileRepository,
 )
@@ -123,17 +120,3 @@ class TestFileService:
         assert result == self.file_id
         self.file.specify_size.assert_called_once_with(0)
         assert empty_content.tell() == 0
-
-    async def test_get_file_presigned_url_success(self) -> None:
-        # Arrange
-        query = GetPresignedUrlQuery(object_key=self.object_key_value)
-
-        # Act
-        result = await self.service.get_file_presigned_url(query)
-
-        # Assert
-        assert result == self.presigned_url
-        self.file_storage.get_presigned_get_url.assert_awaited_once_with(
-            self.object_key,
-            self.expiration_delta,
-        )

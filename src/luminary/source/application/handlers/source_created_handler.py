@@ -64,15 +64,15 @@ class SourceCreatedHandler(IEventHandler[SourceCreatedEvent]):
     async def handle_file(self, source: FileSource) -> None:
         user_id = source.owner_id.value
 
-        raw_content = await self.file_service.get_file(
-            GetFileQuery(user_id=user_id, object_key=str(source.file_id.value))
+        data = await self.file_service.get_file(
+            GetFileQuery(user_id=user_id, file_id=source.file_id.value)
         )
 
         try:
             content_id = await self.content_service.process_file(
                 ProcessFileCommand(
                     user_id=source.owner_id.value,
-                    data=raw_content,
+                    data=data,
                     filename=source.title.value,
                 )
             )
