@@ -15,6 +15,11 @@ from luminary.source.domain.entity.source import SourceId
 from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_repository import (
     SourceRepository,
 )
+from tests.intergration.sqlalchemy.utils import (
+    add_file_source,
+    add_link_source,
+    add_page_source,
+)
 
 
 @pytest.mark.asyncio
@@ -26,31 +31,9 @@ class TestSourceRepository:
         self.maker = maker
         self.repository = SourceRepository(query_executor)
 
-    async def _add_file_source(self) -> FileSource:
-        source = make_file_source()
-        await self.repository.add(source)
-        return source
-
-    async def _add_link_source(self) -> LinkSource:
-        source = make_link_source()
-        await self.repository.add(source)
-        return source
-
-    async def _add_page_source(self) -> PageSource:
-        source = make_page_source()
-        await self.repository.add(source)
-        return source
-
-    async def _exists(self, id: SourceId) -> bool:
-        try:
-            await self.repository.get_by_id(id)
-            return True
-        except NotFoundError:
-            return False
-
     async def test_get_file_source_success(self):
         # Arrange
-        source = await self._add_file_source()
+        source = await add_file_source(self.maker)
 
         # Act
         result = await self.repository.get_by_id(source.id)
@@ -60,7 +43,7 @@ class TestSourceRepository:
 
     async def test_get_link_source_success(self):
         # Arrange
-        source = await self._add_link_source()
+        source = await add_link_source(self.maker)
 
         # Act
         result = await self.repository.get_by_id(source.id)
@@ -70,7 +53,7 @@ class TestSourceRepository:
 
     async def test_get_page_source_success(self):
         # Arrange
-        source = await self._add_page_source()
+        source = await add_page_source(self.maker)
 
         # Act
         result = await self.repository.get_by_id(source.id)
@@ -118,7 +101,7 @@ class TestSourceRepository:
 
     async def test_save_file_source_success(self):
         # Arrange
-        source = await self._add_file_source()
+        source = await add_file_source(self.maker)
         source.title = Title("New File Source 123")
 
         # Act
@@ -131,7 +114,7 @@ class TestSourceRepository:
 
     async def test_save_link_source_success(self):
         # Arrange
-        source = await self._add_link_source()
+        source = await add_link_source(self.maker)
         source.url = Url("https://updated-example.com")
 
         # Act
@@ -145,7 +128,7 @@ class TestSourceRepository:
 
     async def test_save_page_source_success(self):
         # Arrange
-        source = await self._add_page_source()
+        source = await add_page_source(self.maker)
         source.editable = False
 
         # Act

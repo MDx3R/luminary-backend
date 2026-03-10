@@ -3,15 +3,12 @@ from uuid import uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from tests.unit.chat.utils import make_chat, make_message
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests.intergration.sqlalchemy.utils import add_chat, add_message
+from tests.unit.chat.utils import make_message
 
-from luminary.chat.domain.entity.chat import Chat
-from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 from luminary.chat.domain.value_objects.message_id import MessageId
-from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
-    ChatRepository,
-)
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.message_repository import (
     MessageRepository,
 )
@@ -22,53 +19,70 @@ class TestMessageReader:
     """Integration tests for MessageRepository as IMessageReader."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, maker, query_executor: QueryExecutor):
+    def setup(
+        self, maker: async_sessionmaker[AsyncSession], query_executor: QueryExecutor
+    ):
         self.maker = maker
-        self.chat_repository = ChatRepository(query_executor)
         self.message_repository = MessageRepository(query_executor)
 
     async def _add_chat_and_messages(self, chat_id=None, count: int = 3):
-        chat = make_chat(chat_id=chat_id or uuid4())
-        await self.chat_repository.add(chat)
+        chat = await add_chat(self.maker, chat_id=chat_id or uuid4())
         messages = []
         for i in range(count):
-            msg = make_message(
+            msg = await add_message(
+                self.maker,
                 chat_id=chat.id.value,
                 content=f"Message {i}",
                 role=Author.USER if i % 2 == 0 else Author.ASSISTANT,
             )
-            await self.message_repository.add(msg)
             messages.append(msg)
         return chat, messages
 
     async def test_get_chat_messages_empty(self):
-        chat = make_chat()
-        await self.chat_repository.add(chat)
+        # Arrange
+        chat = await add_chat(self.maker)
+
+        # Act
         result = await self.message_repository.get_chat_messages(chat.id)
+
+        # Assert
         assert result == []
 
     async def test_get_chat_messages_returns_in_order(self):
+        # Arrange
         _, messages = await self._add_chat_and_messages(count=3)
         chat_id = messages[0].chat_id
+
+        # Act
         result = await self.message_repository.get_chat_messages(chat_id)
-        assert len(result) == 3  # noqa: PLR2004
-        assert [m.content for m in result] == ["Message 0", "Message 1", "Message 2"]
+
+        # Assert
         assert [m.id for m in result] == [m.id for m in messages]
+        assert [m.content for m in result] == ["Message 0", "Message 1", "Message 2"]
 
     async def test_get_chat_messages_with_limit(self):
+        # Arrange
         _, messages = await self._add_chat_and_messages(count=5)
         chat_id = messages[0].chat_id
+
+        # Act
         result = await self.message_repository.get_chat_messages(chat_id, limit=2)
-        assert len(result) == 2  # noqa: PLR2004
-        assert result[0].content == "Message 0"
-        assert result[1].content == "Message 1"
+
+        # Assert
+        assert [m.id for m in result] == [m.id for m in messages[:2]]
+        assert [m.content for m in result] == ["Message 0", "Message 1"]
 
     async def test_get_chat_messages_only_for_given_chat(self):
+        # Arrange
         _, messages_a = await self._add_chat_and_messages(count=2)
         await self._add_chat_and_messages(count=2)
         chat_id_a = messages_a[0].chat_id
+
+        # Act
         result = await self.message_repository.get_chat_messages(chat_id_a)
-        assert len(result) == 2  # noqa: PLR2004
+
+        # Assert
+        assert {m.id for m in result} == {m.id for m in messages_a}
         assert all(m.chat_id == chat_id_a for m in result)
 
 
@@ -77,21 +91,23 @@ class TestMessageRepository:
     """Integration tests for MessageRepository as IMessageRepository."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, maker, query_executor: QueryExecutor):
+    def setup(
+        self, maker: async_sessionmaker[AsyncSession], query_executor: QueryExecutor
+    ):
         self.maker = maker
-        self.chat_repository = ChatRepository(query_executor)
         self.repository = MessageRepository(query_executor)
 
-    async def _add_chat_and_message(self) -> tuple[Chat, Message]:
-        chat = make_chat()
-        await self.chat_repository.add(chat)
-        message = make_message(chat_id=chat.id.value, content="Initial")
-        await self.repository.add(message)
-        return chat, message
-
     async def test_get_by_id_success(self) -> None:
-        _, message = await self._add_chat_and_message()
+        # Arrange
+        chat = await add_chat(self.maker)
+        message = await add_message(
+            self.maker, chat_id=chat.id.value, content="Initial"
+        )
+
+        # Act
         result = await self.repository.get_by_id(message.id)
+
+        # Assert
         assert result.id == message.id
         assert result.chat_id == message.chat_id
         assert result.content == message.content
@@ -99,21 +115,38 @@ class TestMessageRepository:
         assert result.status == message.status
 
     async def test_get_by_id_not_found(self):
+        # Act & Assert
         with pytest.raises(NotFoundError):
             await self.repository.get_by_id(MessageId(uuid4()))
 
     async def test_add_and_get(self):
-        _, message = await self._add_chat_and_message()
+        # Arrange
+        chat = await add_chat(self.maker)
+        message = make_message(chat_id=chat.id.value, content="Initial")
+        await self.repository.add(message)
+
+        # Act
         loaded = await self.repository.get_by_id(message.id)
+
+        # Assert
+        assert loaded.id == message.id
         assert loaded.content == message.content
         assert loaded.model_id == message.model_id
 
     async def test_save_updates_entity(self):
-        _, message = await self._add_chat_and_message()
+        # Arrange
+        chat = await add_chat(self.maker)
+        message = await add_message(
+            self.maker, chat_id=chat.id.value, content="Initial"
+        )
         message.add_chunk(" appended")
         message.complete(tokens=10)
+
+        # Act
         await self.repository.save(message)
         loaded = await self.repository.get_by_id(message.id)
+
+        # Assert
         assert loaded.content == "Initial appended"
         assert loaded.status == MessageStatus.COMPLETED
         assert loaded.tokens == 10  # noqa: PLR2004
