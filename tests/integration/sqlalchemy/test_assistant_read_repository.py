@@ -1,6 +1,6 @@
 """Integration tests for AssistantReadRepository."""
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
@@ -8,6 +8,7 @@ from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.integration.sqlalchemy.utils import add_assistant, persist_assistant
 from tests.unit.assistant.utils import make_assistant
 
+from luminary.assistant.domain.entity.assistant import Assistant
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_read_repository import (
     AssistantReadRepository,
 )
@@ -20,7 +21,7 @@ class TestAssistantReadRepository:
         self.maker = maker
         self.read_repo = AssistantReadRepository(query_executor)
 
-    async def _add_assistant(self, owner_id=None):
+    async def _add_assistant(self, owner_id: UUID | None = None) -> Assistant:
         owner_id = owner_id or uuid4()
         return await add_assistant(
             maker=self.maker, user_id=owner_id, name="Test", description="Desc"

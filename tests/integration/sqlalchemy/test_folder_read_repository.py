@@ -1,7 +1,7 @@
 """Integration tests for FolderReadRepository."""
 
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
@@ -19,6 +19,7 @@ from tests.unit.folder.utils import make_folder
 from tests.unit.source.utils import make_file_source, make_link_source, make_page_source
 
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.entity.folder import Folder
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_read_repository import (
     FolderReadRepository,
 )
@@ -35,7 +36,7 @@ class TestFolderReadRepository:
         self.maker = maker
         self.read_repo = FolderReadRepository(query_executor)
 
-    async def _add_folder(self, owner_id=None):
+    async def _add_folder(self, owner_id: UUID | None = None) -> Folder:
         owner_id = owner_id or uuid4()
         return await add_folder(self.maker, owner_id=owner_id)
 

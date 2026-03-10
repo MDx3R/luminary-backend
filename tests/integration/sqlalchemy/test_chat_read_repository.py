@@ -1,6 +1,6 @@
 """Integration tests for ChatReadRepository."""
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
@@ -15,6 +15,8 @@ from tests.integration.sqlalchemy.utils import (
 from tests.unit.chat.utils import make_chat
 from tests.unit.source.utils import make_file_source, make_link_source, make_page_source
 
+from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.entity.message import Message
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.attachment_base import (
     AttachmentBase,
 )
@@ -35,7 +37,9 @@ class TestChatReadRepository:
         self.query_executor = query_executor
         self.read_repo = ChatReadRepository(query_executor)
 
-    async def _add_chat(self, owner_id=None, folder_id=None, assistant_id=None):
+    async def _add_chat(
+        self, owner_id: UUID | None = None, folder_id=None, assistant_id=None
+    ) -> Chat:
         owner_id = owner_id or uuid4()
         return await add_chat(
             self.maker,
@@ -44,7 +48,7 @@ class TestChatReadRepository:
             assistant_id=assistant_id,
         )
 
-    async def _add_message(self, chat_id, content="Msg"):
+    async def _add_message(self, chat_id, content="Msg") -> Message:
         return await add_message(self.maker, chat_id=chat_id, content=content)
 
     # --- get_by_id ---

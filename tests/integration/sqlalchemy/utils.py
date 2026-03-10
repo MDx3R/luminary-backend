@@ -1,6 +1,15 @@
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests.unit.assistant.utils import make_assistant
+from tests.unit.chat.utils import make_chat, make_message
+from tests.unit.folder.utils import make_folder
+from tests.unit.source.utils import (
+    make_file_source,
+    make_link_source,
+    make_page_source,
+    make_source,
+)
 
 from luminary.assistant.domain.entity.assistant import Assistant
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.mappers.assistant_mapper import (
@@ -24,15 +33,6 @@ from luminary.source.domain.entity.page_source import PageSource
 from luminary.source.domain.entity.source import Source
 from luminary.source.infrastructure.database.postgres.sqlalchemy.mappers.source_mapper import (
     SourceMapper,
-)
-from tests.unit.assistant.utils import make_assistant
-from tests.unit.chat.utils import make_chat, make_message
-from tests.unit.folder.utils import make_folder
-from tests.unit.source.utils import (
-    make_file_source,
-    make_link_source,
-    make_page_source,
-    make_source,
 )
 
 

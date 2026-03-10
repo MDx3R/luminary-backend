@@ -1,6 +1,6 @@
 """Integration tests for SourceReadRepository."""
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from common.application.exceptions import NotFoundError
@@ -13,6 +13,9 @@ from tests.integration.sqlalchemy.utils import (
 )
 from tests.unit.source.utils import make_file_source
 
+from luminary.source.domain.entity.file_source import FileSource
+from luminary.source.domain.entity.link_source import LinkSource
+from luminary.source.domain.entity.page_source import PageSource
 from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_read_repository import (
     SourceReadRepository,
 )
@@ -25,17 +28,17 @@ class TestSourceReadRepository:
         self.maker = maker
         self.read_repo = SourceReadRepository(query_executor)
 
-    async def _add_file_source(self, owner_id=None):
+    async def _add_file_source(self, owner_id: UUID | None = None) -> FileSource:
         owner_id = owner_id or uuid4()
         return await add_file_source(maker=self.maker, owner_id=owner_id)
 
-    async def _add_link_source(self, owner_id=None):
+    async def _add_link_source(self, owner_id: UUID | None = None) -> LinkSource:
         owner_id = owner_id or uuid4()
         return await add_link_source(
             maker=self.maker, owner_id=owner_id, url="https://link.test"
         )
 
-    async def _add_page_source(self, owner_id=None):
+    async def _add_page_source(self, owner_id: UUID | None = None) -> PageSource:
         owner_id = owner_id or uuid4()
         return await add_page_source(
             maker=self.maker, owner_id=owner_id, editable=False
