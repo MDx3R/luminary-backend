@@ -53,6 +53,18 @@ from luminary.chat.application.interfaces.usecases.command.update_chat_settings_
     IUpdateChatSettingsUseCase,
     UpdateChatSettingsCommand,
 )
+from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
+    GetChatByIdQuery,
+    IGetChatByIdUseCase,
+)
+from luminary.chat.application.interfaces.usecases.query.list_chat_messages_use_case import (
+    IListChatMessagesUseCase,
+    ListChatMessagesQuery,
+)
+from luminary.chat.application.interfaces.usecases.query.list_user_chats_use_case import (
+    IListUserChatsUseCase,
+    ListUserChatsQuery,
+)
 from luminary.chat.presentation.http.dto.request import (
     AddSourceToChatRequest,
     ChangeChatAssistantRequest,
@@ -61,7 +73,12 @@ from luminary.chat.presentation.http.dto.request import (
     UpdateChatNameRequest,
     UpdateChatSettingsRequest,
 )
-from luminary.chat.presentation.http.dto.response import StreamingMessageResponse
+from luminary.chat.presentation.http.dto.response import (
+    ChatResponse,
+    ChatSummaryResponse,
+    MessageResponse,
+    StreamingMessageResponse,
+)
 
 
 command_router = APIRouter()
@@ -263,3 +280,52 @@ class ChatCommandController:
                 user_id=descriptor.identity_id, chat_id=chat_id, message_id=message_id
             )
         )
+
+
+query_router = APIRouter()
+
+
+@cbv(query_router)
+class ChatQueryController:
+    get_chat_by_id_use_case: IGetChatByIdUseCase = Depends()
+    list_user_chats_use_case: IListUserChatsUseCase = Depends()
+    list_chat_messages_use_case: IListChatMessagesUseCase = Depends()
+
+    @query_router.get("/{chat_id:uuid}/messages")
+    async def list_messages(
+        self,
+        chat_id: UUID,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+        limit: int = 50,
+        before: UUID | None = None,
+    ) -> list[MessageResponse]:
+        read_models = await self.list_chat_messages_use_case.execute(
+            ListChatMessagesQuery(
+                user_id=descriptor.identity_id,
+                chat_id=chat_id,
+                limit=limit,
+                before=before,
+            )
+        )
+        return [MessageResponse.from_read_model(m) for m in read_models]
+
+    @query_router.get("/{chat_id:uuid}")
+    async def get_chat(
+        self,
+        chat_id: UUID,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> ChatResponse:
+        read_model = await self.get_chat_by_id_use_case.execute(
+            GetChatByIdQuery(user_id=descriptor.identity_id, chat_id=chat_id)
+        )
+        return ChatResponse.from_read_model(read_model)
+
+    @query_router.get("/")
+    async def list_chats(
+        self,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> list[ChatSummaryResponse]:
+        read_models = await self.list_user_chats_use_case.execute(
+            ListUserChatsQuery(user_id=descriptor.identity_id)
+        )
+        return [ChatSummaryResponse.from_read_model(m) for m in read_models]

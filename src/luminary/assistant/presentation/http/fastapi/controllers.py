@@ -23,10 +23,22 @@ from luminary.assistant.application.interfaces.usecases.command.update_assistant
     IUpdateAssistantInstructionsUseCase,
     UpdateAssistantInstructionsCommand,
 )
+from luminary.assistant.application.interfaces.usecases.query.get_assistant_use_case import (
+    GetAssistantByIdQuery,
+    IGetAssistantByIdUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.query.list_assistants_use_case import (
+    IListAssistantsUseCase,
+    ListAssistantsQuery,
+)
 from luminary.assistant.presentation.http.dto.request import (
     CreateAssistantRequest,
     UpdateAssistantInfoRequest,
     UpdateAssistantInstructionsRequest,
+)
+from luminary.assistant.presentation.http.dto.response import (
+    AssistantResponse,
+    AssistantSummaryResponse,
 )
 
 
@@ -110,3 +122,35 @@ class AssistantCommandController:
                 assistant_id=assistant_id,
             )
         )
+
+
+query_router = APIRouter()
+
+
+@cbv(query_router)
+class AssistantQueryController:
+    get_assistant_by_id_use_case: IGetAssistantByIdUseCase = Depends()
+    list_assistants_use_case: IListAssistantsUseCase = Depends()
+
+    @query_router.get("/")
+    async def list_assistants(
+        self,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> list[AssistantSummaryResponse]:
+        read_models = await self.list_assistants_use_case.execute(
+            ListAssistantsQuery(user_id=descriptor.identity_id)
+        )
+        return [AssistantSummaryResponse.from_read_model(m) for m in read_models]
+
+    @query_router.get("/{assistant_id:uuid}")
+    async def get_assistant(
+        self,
+        assistant_id: UUID,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> AssistantResponse:
+        read_model = await self.get_assistant_by_id_use_case.execute(
+            GetAssistantByIdQuery(
+                user_id=descriptor.identity_id, assistant_id=assistant_id
+            )
+        )
+        return AssistantResponse.from_read_model(read_model)

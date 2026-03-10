@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from common.presentation.http.dto.response import IDResponse
 from common.presentation.http.fastapi.cbv import cbv
@@ -18,11 +19,20 @@ from luminary.source.application.interfaces.usecases.command.create_source_use_c
     ICreateLinkSourceUseCase,
     ICreatePageSourceUseCase,
 )
+from luminary.source.application.interfaces.usecases.query.get_source_use_case import (
+    GetSourceByIdQuery,
+    IGetSourceByIdUseCase,
+)
+from luminary.source.application.interfaces.usecases.query.list_user_sources_use_case import (
+    IListUserSourcesUseCase,
+    ListUserSourcesQuery,
+)
 from luminary.source.presentation.http.dto.request import (
     CreateFileSourceRequest,
     CreateLinkSourceRequest,
     CreatePageSourceRequest,
 )
+from luminary.source.presentation.http.dto.response import SourceResponse
 
 
 command_router = APIRouter()
@@ -85,3 +95,33 @@ class SourceCommandController:
         )
 
         return IDResponse(id=source_id)
+
+
+query_router = APIRouter()
+
+
+@cbv(query_router)
+class SourceQueryController:
+    get_source_by_id_use_case: IGetSourceByIdUseCase = Depends()
+    list_user_sources_use_case: IListUserSourcesUseCase = Depends()
+
+    @query_router.get("/")
+    async def list_sources(
+        self,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> list[SourceResponse]:
+        read_models = await self.list_user_sources_use_case.execute(
+            ListUserSourcesQuery(user_id=descriptor.identity_id)
+        )
+        return [SourceResponse.from_read_model(m) for m in read_models]
+
+    @query_router.get("/{source_id:uuid}")
+    async def get_source(
+        self,
+        source_id: UUID,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> SourceResponse:
+        read_model = await self.get_source_by_id_use_case.execute(
+            GetSourceByIdQuery(user_id=descriptor.identity_id, source_id=source_id)
+        )
+        return SourceResponse.from_read_model(read_model)

@@ -5,6 +5,7 @@ from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.unit.chat.utils import make_chat
 
+from luminary.chat.domain.entity.chat import Chat
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
     ChatRepository,
@@ -19,7 +20,7 @@ class TestChatRepository:
         self.maker = maker
         self.repository = ChatRepository(query_executor)
 
-    async def _add_chat(self):
+    async def _add_chat(self) -> Chat:
         chat = make_chat()
         await self.repository.add(chat)
         return chat

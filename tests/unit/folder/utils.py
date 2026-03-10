@@ -10,7 +10,7 @@ from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.domain.value_objects.folder_info import FolderInfo
 
 
-def make_folder(
+def make_folder(  # noqa: PLR0913
     *,
     folder_id: UUID | None = None,
     owner_id: UUID | None = None,

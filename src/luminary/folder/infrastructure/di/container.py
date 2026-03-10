@@ -52,7 +52,16 @@ from luminary.folder.application.usecases.command.update_editor_content_use_case
 from luminary.folder.application.usecases.command.update_folder_info_use_case import (
     UpdateFolderInfoUseCase,
 )
+from luminary.folder.application.usecases.query.get_folder_use_case import (
+    GetFolderByIdUseCase,
+)
+from luminary.folder.application.usecases.query.list_user_folders_use_case import (
+    ListUserFoldersUseCase,
+)
 from luminary.folder.domain.factories.folder_factory import FolderFactory
+from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_read_repository import (
+    FolderReadRepository,
+)
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_repository import (
     FolderRepository,
 )
@@ -74,6 +83,7 @@ class FolderContainer(containers.DeclarativeContainer):
     )
 
     folder_repository = providers.Singleton(FolderRepository, query_executor)
+    folder_read_repository = providers.Singleton(FolderReadRepository, query_executor)
     event_bus_folder_repository = providers.Singleton(
         EventBusFolderRepository,
         uow=unit_of_work,
@@ -136,6 +146,14 @@ class FolderContainer(containers.DeclarativeContainer):
         repository=event_bus_folder_repository,
         access_policy=folder_access_policy,
         clock=clock,
+    )
+
+    # Query use cases
+    get_folder_by_id_use_case = providers.Singleton(
+        GetFolderByIdUseCase, read_repository=folder_read_repository
+    )
+    list_user_folders_use_case = providers.Singleton(
+        ListUserFoldersUseCase, read_repository=folder_read_repository
     )
 
     source_deleted_handler = providers.Singleton(

@@ -1,4 +1,4 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 from typing import Final
 from uuid import UUID
 
@@ -23,7 +23,7 @@ ROLE_MAP: Final[dict[Role, MessageRole]] = {
 }
 
 
-def build_filters(source_ids: list[UUID]) -> MetadataFilters:  # type: ignore
+def build_filters(source_ids: Sequence[UUID]) -> MetadataFilters:  # type: ignore
     return MetadataFilters(
         filters=[
             MetadataFilter(
@@ -37,7 +37,7 @@ def build_filters(source_ids: list[UUID]) -> MetadataFilters:  # type: ignore
     )
 
 
-def build_history(history: list[MessageDTO]) -> list[ChatMessage]:
+def build_history(history: Sequence[MessageDTO]) -> Sequence[ChatMessage]:
     return [
         ChatMessage(
             content=msg.content,
@@ -65,8 +65,8 @@ class LlamaIndexEngine(IInferenceEngine):
         query: str,
         *,
         system_prompt: str,
-        source_ids: list[UUID],
-        history: list[MessageDTO],
+        source_ids: Sequence[UUID],
+        history: Sequence[MessageDTO],
     ) -> AsyncGenerator[EngineStreamingResponse, None]:
         filters = build_filters(source_ids)
 
@@ -121,8 +121,8 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         query: str,
         *,
         system_prompt: str,
-        source_ids: list[UUID],
-        history: list[MessageDTO],
+        source_ids: Sequence[UUID],
+        history: Sequence[MessageDTO],
     ) -> AsyncGenerator[EngineStreamingResponse, None]:
         filters = build_filters(source_ids)
 

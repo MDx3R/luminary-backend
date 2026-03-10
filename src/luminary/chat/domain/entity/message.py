@@ -58,17 +58,13 @@ class Message(Entity):
     def cancel(self) -> None:
         self.status = MessageStatus.CANCELLED
         self._record_event(
-            MessageCancelledEvent(
-                message_id=self.id.value, chat_id=self.chat_id.value
-            )
+            MessageCancelledEvent(message_id=self.id.value, chat_id=self.chat_id.value)
         )
 
     def fail(self) -> None:
         self.status = MessageStatus.FAILED
         self._record_event(
-            MessageFailedEvent(
-                message_id=self.id.value, chat_id=self.chat_id.value
-            )
+            MessageFailedEvent(message_id=self.id.value, chat_id=self.chat_id.value)
         )
 
     def complete(self, tokens: int) -> None:

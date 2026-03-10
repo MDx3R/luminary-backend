@@ -6,6 +6,7 @@ from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.unit.folder.utils import make_folder
 
 from luminary.chat.domain.value_objects.chat_id import ChatId
+from luminary.folder.domain.entity.folder import Folder
 from luminary.folder.domain.value_objects.folder_id import FolderId
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_repository import (
     FolderRepository,
@@ -20,7 +21,7 @@ class TestFolderRepository:
         self.maker = maker
         self.repository = FolderRepository(query_executor)
 
-    async def _add_folder(self):
+    async def _add_folder(self) -> Folder:
         folder = make_folder()
         await self.repository.add(folder)
         return folder

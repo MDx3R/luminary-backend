@@ -53,8 +53,20 @@ from luminary.chat.application.usecases.command.update_chat_name_use_case import
 from luminary.chat.application.usecases.command.update_chat_settings_use_case import (
     UpdateChatSettingsUseCase,
 )
+from luminary.chat.application.usecases.query.get_chat_use_case import (
+    GetChatByIdUseCase,
+)
+from luminary.chat.application.usecases.query.list_chat_messages_use_case import (
+    ListChatMessagesUseCase,
+)
+from luminary.chat.application.usecases.query.list_user_chats_use_case import (
+    ListUserChatsUseCase,
+)
 from luminary.chat.domain.factories.chat_factory import ChatFactory
 from luminary.chat.domain.factories.message_factory import MessageFactory
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_read_repository import (
+    ChatReadRepository,
+)
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
     ChatRepository,
 )
@@ -79,6 +91,7 @@ class ChatContainer(containers.DeclarativeContainer):
     )
 
     chat_repository = providers.Singleton(ChatRepository, query_executor)
+    chat_read_repository = providers.Singleton(ChatReadRepository, query_executor)
     event_bus_chat_repository = providers.Singleton(
         EventBusChatRepository,
         uow=unit_of_work,
@@ -164,6 +177,17 @@ class ChatContainer(containers.DeclarativeContainer):
         DeleteChatUseCase,
         repository=event_bus_chat_repository,
         access_policy=chat_access_policy,
+    )
+
+    # Query use cases
+    get_chat_by_id_use_case = providers.Singleton(
+        GetChatByIdUseCase, read_repository=chat_read_repository
+    )
+    list_user_chats_use_case = providers.Singleton(
+        ListUserChatsUseCase, read_repository=chat_read_repository
+    )
+    list_chat_messages_use_case = providers.Singleton(
+        ListChatMessagesUseCase, read_repository=chat_read_repository
     )
 
     assistant_deleted_handler = providers.Singleton(

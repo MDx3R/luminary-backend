@@ -25,7 +25,16 @@ from luminary.source.application.usecases.command.delete_source_use_case import 
 from luminary.source.application.usecases.command.update_source_use_case import (
     UpdateSourceUseCase,
 )
+from luminary.source.application.usecases.query.get_source_use_case import (
+    GetSourceByIdUseCase,
+)
+from luminary.source.application.usecases.query.list_user_sources_use_case import (
+    ListUserSourcesUseCase,
+)
 from luminary.source.domain.factories.source_factory import SourceFactory
+from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_read_repository import (
+    SourceReadRepository,
+)
 from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_repository import (
     SourceRepository,
 )
@@ -53,6 +62,7 @@ class SourceContainer(containers.DeclarativeContainer):
 
     # Write repository
     source_repository = providers.Singleton(SourceRepository, query_executor)
+    source_read_repository = providers.Singleton(SourceReadRepository, query_executor)
     event_bus_source_repository = providers.Singleton(
         EventBusSourceRepository,
         uow=unit_of_work,
@@ -91,6 +101,14 @@ class SourceContainer(containers.DeclarativeContainer):
         DeleteSourceUseCase,
         repository=event_bus_source_repository,
         access_policy=source_access_policy,
+    )
+
+    # Query use cases
+    get_source_by_id_use_case = providers.Singleton(
+        GetSourceByIdUseCase, read_repository=source_read_repository
+    )
+    list_user_sources_use_case = providers.Singleton(
+        ListUserSourcesUseCase, read_repository=source_read_repository
     )
 
     source_created_handler = providers.Singleton(

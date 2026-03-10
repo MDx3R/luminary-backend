@@ -22,6 +22,9 @@ from testcontainers.postgres import PostgresContainer
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.models.assistant_base import (
     AssistantBase,
 )
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.attachment_base import (
+    AttachmentBase,
+)
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
     ChatBase,
     ChatSourceAssociation,
@@ -54,6 +57,7 @@ __models__: list[type[Base]] = [
     ChatBase,
     ChatSourceAssociation,
     MessageBase,
+    AttachmentBase,
     FolderBase,
     FolderChatAssociation,
     FolderSourceAssociation,

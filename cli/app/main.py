@@ -54,10 +54,17 @@ from luminary.assistant.application.interfaces.usecases.command.update_assistant
 from luminary.assistant.application.interfaces.usecases.command.update_assistant_instructions_use_case import (
     IUpdateAssistantInstructionsUseCase,
 )
+from luminary.assistant.application.interfaces.usecases.query.get_assistant_use_case import (
+    IGetAssistantByIdUseCase,
+)
+from luminary.assistant.application.interfaces.usecases.query.list_assistants_use_case import (
+    IListAssistantsUseCase,
+)
 from luminary.assistant.domain.events.events import AssistantDeletedEvent
 from luminary.assistant.infrastructure.di.container import AssistantContainer
 from luminary.assistant.presentation.http.fastapi.controllers import (
     command_router as assistant_command_router,
+    query_router as assistant_query_router,
 )
 from luminary.chat.application.interfaces.usecases.command.add_source_to_chat_use_case import (
     IAddSourceToChatUseCase,
@@ -92,10 +99,20 @@ from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_
 from luminary.chat.application.interfaces.usecases.command.update_chat_settings_use_case import (
     IUpdateChatSettingsUseCase,
 )
+from luminary.chat.application.interfaces.usecases.query.get_chat_use_case import (
+    IGetChatByIdUseCase,
+)
+from luminary.chat.application.interfaces.usecases.query.list_chat_messages_use_case import (
+    IListChatMessagesUseCase,
+)
+from luminary.chat.application.interfaces.usecases.query.list_user_chats_use_case import (
+    IListUserChatsUseCase,
+)
 from luminary.chat.domain.events.events import ChatDeletedEvent, ChatSourceRemovedEvent
 from luminary.chat.infrastructure.di.container import ChatContainer
 from luminary.chat.presentation.http.fastapi.controllers import (
     command_router as chat_command_router,
+    query_router as chat_query_router,
 )
 from luminary.content.infrastructure.di.container import ContentContainer
 from luminary.folder.application.interfaces.usecases.command.add_source_to_folder_use_case import (
@@ -128,6 +145,12 @@ from luminary.folder.application.interfaces.usecases.command.update_editor_conte
 from luminary.folder.application.interfaces.usecases.command.update_folder_info_use_case import (
     IUpdateFolderInfoUseCase,
 )
+from luminary.folder.application.interfaces.usecases.query.get_folder_use_case import (
+    IGetFolderByIdUseCase,
+)
+from luminary.folder.application.interfaces.usecases.query.list_user_folders_use_case import (
+    IListUserFoldersUseCase,
+)
 from luminary.folder.domain.events.events import (
     FolderChatRemovedEvent,
     FolderSourceRemovedEvent,
@@ -135,6 +158,7 @@ from luminary.folder.domain.events.events import (
 from luminary.folder.infrastructure.di.container import FolderContainer
 from luminary.folder.presentation.http.fastapi.controllers import (
     command_router as folder_command_router,
+    query_router as folder_query_router,
 )
 from luminary.model.infrastructure.di.container import ModelContainer
 from luminary.model.infrastructure.services.llama_index.client import MappedOpenAI
@@ -142,6 +166,12 @@ from luminary.source.application.interfaces.usecases.command.create_source_use_c
     ICreateFileSourceUseCase,
     ICreateLinkSourceUseCase,
     ICreatePageSourceUseCase,
+)
+from luminary.source.application.interfaces.usecases.query.get_source_use_case import (
+    IGetSourceByIdUseCase,
+)
+from luminary.source.application.interfaces.usecases.query.list_user_sources_use_case import (
+    IListUserSourcesUseCase,
 )
 from luminary.source.domain.events.events import (
     SourceCreatedEvent,
@@ -151,6 +181,7 @@ from luminary.source.domain.events.events import (
 from luminary.source.infrastructure.di.container import SourceContainer
 from luminary.source.presentation.http.fastapi.controllers import (
     command_router as source_command_router,
+    query_router as source_query_router,
 )
 
 
@@ -454,14 +485,14 @@ def main() -> FastAPI:  # noqa: PLR0915
         chat_repository=chat_container.event_bus_chat_repository,
     )
 
-    router = RabbitRouter(
+    rabbit_router = RabbitRouter(
         handlers=[
             *create_source_routes(event_bus(), source_container),
             *create_folder_routes(event_bus(), folder_container),
             *create_chat_routes(event_bus(), chat_container),
         ]
     )
-    broker.include_router(router)
+    broker.include_router(rabbit_router)
 
     # Register routes
     server.dependency_overrides[IFileService] = lambda: file_container.file_service()
@@ -473,6 +504,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[ICreateLinkSourceUseCase] = (
         lambda: source_container.create_link_source_use_case()
+    )
+    server.dependency_overrides[IGetSourceByIdUseCase] = (
+        lambda: source_container.get_source_by_id_use_case()
+    )
+    server.dependency_overrides[IListUserSourcesUseCase] = (
+        lambda: source_container.list_user_sources_use_case()
     )
 
     server.dependency_overrides[ICreateAssistantUseCase] = (
@@ -486,6 +523,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IDeleteAssistantUseCase] = (
         lambda: assistant_container.delete_assistant_use_case()
+    )
+    server.dependency_overrides[IGetAssistantByIdUseCase] = (
+        lambda: assistant_container.get_assistant_by_id_use_case()
+    )
+    server.dependency_overrides[IListAssistantsUseCase] = (
+        lambda: assistant_container.list_assistants_use_case()
     )
 
     server.dependency_overrides[ICreateChatUseCase] = (
@@ -521,6 +564,15 @@ def main() -> FastAPI:  # noqa: PLR0915
     server.dependency_overrides[IGetStreamingMessageResponseUseCase] = (
         lambda: chat_container.get_streaming_message_response_use_case()
     )
+    server.dependency_overrides[IGetChatByIdUseCase] = (
+        lambda: chat_container.get_chat_by_id_use_case()
+    )
+    server.dependency_overrides[IListUserChatsUseCase] = (
+        lambda: chat_container.list_user_chats_use_case()
+    )
+    server.dependency_overrides[IListChatMessagesUseCase] = (
+        lambda: chat_container.list_chat_messages_use_case()
+    )
 
     server.dependency_overrides[ICreateFolderUseCase] = (
         lambda: folder_container.create_folder_use_case()
@@ -552,6 +604,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     server.dependency_overrides[IUpdateEditorContentUseCase] = (
         lambda: folder_container.update_editor_content_use_case()
     )
+    server.dependency_overrides[IGetFolderByIdUseCase] = (
+        lambda: folder_container.get_folder_by_id_use_case()
+    )
+    server.dependency_overrides[IListUserFoldersUseCase] = (
+        lambda: folder_container.list_user_folders_use_case()
+    )
 
     server.dependency_overrides[ILoginUseCase] = lambda: auth_container.login_use_case()
     server.dependency_overrides[ILogoutUseCase] = (
@@ -582,11 +640,17 @@ def main() -> FastAPI:  # noqa: PLR0915
     server.include_router(auth_router, prefix="/auth", tags=["auth"])
 
     router.include_router(source_command_router, prefix="/sources", tags=["sources"])
+    router.include_router(source_query_router, prefix="/sources", tags=["sources"])
     router.include_router(
         assistant_command_router, prefix="/assistants", tags=["assistants"]
     )
+    router.include_router(
+        assistant_query_router, prefix="/assistants", tags=["assistants"]
+    )
     router.include_router(chat_command_router, prefix="/chats", tags=["chats"])
+    router.include_router(chat_query_router, prefix="/chats", tags=["chats"])
     router.include_router(folder_command_router, prefix="/folders", tags=["folders"])
+    router.include_router(folder_query_router, prefix="/folders", tags=["folders"])
 
     server.include_router(router, prefix="/api/v1")
 

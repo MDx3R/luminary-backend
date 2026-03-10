@@ -173,8 +173,8 @@ class TestFolderEntity:
             assistant_id=None,
             created_at=_now(),
             is_deleted=False,
+            _chats={chat_id},
         )
-        folder._chats.add(chat_id)
         folder.remove_chat(chat_id)
         assert not folder.has_chat(chat_id)
         assert len(folder.events) == 1
@@ -204,8 +204,8 @@ class TestFolderEntity:
             assistant_id=None,
             created_at=_now(),
             is_deleted=False,
+            _sources={source_id},
         )
-        folder._sources.add(source_id)
         folder.remove_source(source_id)
         assert not folder.has_source(source_id)
         assert len(folder.events) == 1

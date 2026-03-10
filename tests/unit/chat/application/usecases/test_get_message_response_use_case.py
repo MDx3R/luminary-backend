@@ -1,11 +1,9 @@
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
 from common.application.exceptions import AccessPolicyError, NotFoundError
 from common.application.interfaces.transactions.unit_of_work import IUnitOfWork
-from common.domain.value_objects.datetime import DateTime
 from tests.unit.chat.utils import make_chat, make_chat_settings, make_message
 
 from luminary.chat.application.interfaces.policies.chat_access_policy import (
@@ -61,7 +59,6 @@ class TestGetStreamingMessageResponseUseCase:
             role=Author.USER,
             content="Hello",
         )
-        now = DateTime(datetime.now(UTC))
         self.assistant_message = make_message(
             chat_id=self.chat_id,
             role=Author.ASSISTANT,

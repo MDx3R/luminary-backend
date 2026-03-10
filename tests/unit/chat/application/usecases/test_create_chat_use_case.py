@@ -3,9 +3,8 @@ from uuid import uuid4
 
 import pytest
 from common.domain.value_objects.id import UserId
-from tests.unit.chat.utils import make_chat, make_chat_settings
+from tests.unit.chat.utils import make_chat
 
-from luminary.assistant.domain.entity.assistant import AssistantId
 from luminary.chat.application.interfaces.repositories.chat_repository import (
     IChatRepository,
 )
@@ -16,9 +15,6 @@ from luminary.chat.application.usecases.command.create_chat_use_case import (
     CreateChatUseCase,
 )
 from luminary.chat.domain.interfaces.chat_factory import ChatFactoryDTO, IChatFactory
-from luminary.chat.domain.value_objects.chat_settings import ChatSettings
-from luminary.folder.domain.value_objects.folder_id import FolderId
-from luminary.model.domain.entity.model import ModelId
 
 
 @pytest.mark.asyncio
@@ -67,7 +63,7 @@ class TestCreateChatUseCase:
         assert call_args.name == self.name
         assert call_args.assistant_id is None
         assert call_args.settings.model_id.value == self.model_id
-        assert call_args.settings.max_context_messages == 10
+        assert call_args.settings.max_context_messages == 10  # noqa: PLR2004
 
     async def test_calls_repository_add_with_created_chat(self) -> None:
         await self.use_case.execute(self.command)

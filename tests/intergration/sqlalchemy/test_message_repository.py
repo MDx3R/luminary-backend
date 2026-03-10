@@ -5,6 +5,8 @@ from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.unit.chat.utils import make_chat, make_message
 
+from luminary.chat.domain.entity.chat import Chat
+from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.enums import Author, MessageStatus
 from luminary.chat.domain.value_objects.message_id import MessageId
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat_repository import (
@@ -49,7 +51,7 @@ class TestMessageReader:
         _, messages = await self._add_chat_and_messages(count=3)
         chat_id = messages[0].chat_id
         result = await self.message_repository.get_chat_messages(chat_id)
-        assert len(result) == 3
+        assert len(result) == 3  # noqa: PLR2004
         assert [m.content for m in result] == ["Message 0", "Message 1", "Message 2"]
         assert [m.id for m in result] == [m.id for m in messages]
 
@@ -57,16 +59,16 @@ class TestMessageReader:
         _, messages = await self._add_chat_and_messages(count=5)
         chat_id = messages[0].chat_id
         result = await self.message_repository.get_chat_messages(chat_id, limit=2)
-        assert len(result) == 2
+        assert len(result) == 2  # noqa: PLR2004
         assert result[0].content == "Message 0"
         assert result[1].content == "Message 1"
 
     async def test_get_chat_messages_only_for_given_chat(self):
         _, messages_a = await self._add_chat_and_messages(count=2)
-        _, messages_b = await self._add_chat_and_messages(count=2)
+        await self._add_chat_and_messages(count=2)
         chat_id_a = messages_a[0].chat_id
         result = await self.message_repository.get_chat_messages(chat_id_a)
-        assert len(result) == 2
+        assert len(result) == 2  # noqa: PLR2004
         assert all(m.chat_id == chat_id_a for m in result)
 
 
@@ -80,14 +82,14 @@ class TestMessageRepository:
         self.chat_repository = ChatRepository(query_executor)
         self.repository = MessageRepository(query_executor)
 
-    async def _add_chat_and_message(self):
+    async def _add_chat_and_message(self) -> tuple[Chat, Message]:
         chat = make_chat()
         await self.chat_repository.add(chat)
         message = make_message(chat_id=chat.id.value, content="Initial")
         await self.repository.add(message)
         return chat, message
 
-    async def test_get_by_id_success(self):
+    async def test_get_by_id_success(self) -> None:
         _, message = await self._add_chat_and_message()
         result = await self.repository.get_by_id(message.id)
         assert result.id == message.id
@@ -114,4 +116,4 @@ class TestMessageRepository:
         loaded = await self.repository.get_by_id(message.id)
         assert loaded.content == "Initial appended"
         assert loaded.status == MessageStatus.COMPLETED
-        assert loaded.tokens == 10
+        assert loaded.tokens == 10  # noqa: PLR2004

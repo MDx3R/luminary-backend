@@ -13,7 +13,7 @@ from luminary.model.domain.entity.model import ModelId
 class MessageMapper:
     @classmethod
     def to_domain(cls, base: MessageBase) -> Message:
-        atts = []
+        atts = list[Attachment]()
         return Message(
             id=MessageId(base.message_id),
             chat_id=ChatId(base.chat_id),

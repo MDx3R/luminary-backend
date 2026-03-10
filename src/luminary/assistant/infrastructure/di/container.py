@@ -22,7 +22,16 @@ from luminary.assistant.application.usecases.command.update_assistant_info_use_c
 from luminary.assistant.application.usecases.command.update_assistant_instructions_use_case import (
     UpdateAssistantInstructionsUseCase,
 )
+from luminary.assistant.application.usecases.query.get_assistant_use_case import (
+    GetAssistantByIdUseCase,
+)
+from luminary.assistant.application.usecases.query.list_assistants_use_case import (
+    ListAssistantsUseCase,
+)
 from luminary.assistant.domain.factories.assistant_factory import AssistantFactory
+from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_read_repository import (
+    AssistantReadRepository,
+)
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_repository import (
     AssistantRepository,
 )
@@ -42,6 +51,9 @@ class AssistantContainer(containers.DeclarativeContainer):
     )
 
     assistant_repository = providers.Singleton(AssistantRepository, query_executor)
+    assistant_read_repository = providers.Singleton(
+        AssistantReadRepository, query_executor
+    )
     event_bus_assistant_repository = providers.Singleton(
         EventBusAssistantRepository,
         uow=unit_of_work,
@@ -70,4 +82,12 @@ class AssistantContainer(containers.DeclarativeContainer):
         DeleteAssistantUseCase,
         repository=event_bus_assistant_repository,
         access_policy=assistant_access_policy,
+    )
+
+    # Query use cases
+    get_assistant_by_id_use_case = providers.Singleton(
+        GetAssistantByIdUseCase, read_repository=assistant_read_repository
+    )
+    list_assistants_use_case = providers.Singleton(
+        ListAssistantsUseCase, read_repository=assistant_read_repository
     )

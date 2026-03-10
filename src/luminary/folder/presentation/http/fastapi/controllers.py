@@ -47,6 +47,14 @@ from luminary.folder.application.interfaces.usecases.command.update_folder_info_
     IUpdateFolderInfoUseCase,
     UpdateFolderInfoCommand,
 )
+from luminary.folder.application.interfaces.usecases.query.get_folder_use_case import (
+    GetFolderByIdQuery,
+    IGetFolderByIdUseCase,
+)
+from luminary.folder.application.interfaces.usecases.query.list_user_folders_use_case import (
+    IListUserFoldersUseCase,
+    ListUserFoldersQuery,
+)
 from luminary.folder.presentation.http.dto.request import (
     AddSourceToFolderRequest,
     ChangeFolderAssistantRequest,
@@ -54,6 +62,10 @@ from luminary.folder.presentation.http.dto.request import (
     CreateFolderRequest,
     UpdateEditorContentRequest,
     UpdateFolderInfoRequest,
+)
+from luminary.folder.presentation.http.dto.response import (
+    FolderResponse,
+    FolderSummaryResponse,
 )
 
 
@@ -244,3 +256,33 @@ class FolderCommandController:
                 text=request.text,
             )
         )
+
+
+query_router = APIRouter()
+
+
+@cbv(query_router)
+class FolderQueryController:
+    get_folder_by_id_use_case: IGetFolderByIdUseCase = Depends()
+    list_user_folders_use_case: IListUserFoldersUseCase = Depends()
+
+    @query_router.get("/")
+    async def list_folders(
+        self,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> list[FolderSummaryResponse]:
+        read_models = await self.list_user_folders_use_case.execute(
+            ListUserFoldersQuery(user_id=descriptor.identity_id)
+        )
+        return [FolderSummaryResponse.from_read_model(m) for m in read_models]
+
+    @query_router.get("/{folder_id:uuid}")
+    async def get_folder(
+        self,
+        folder_id: UUID,
+        descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
+    ) -> FolderResponse:
+        read_model = await self.get_folder_by_id_use_case.execute(
+            GetFolderByIdQuery(user_id=descriptor.identity_id, folder_id=folder_id)
+        )
+        return FolderResponse.from_read_model(read_model)

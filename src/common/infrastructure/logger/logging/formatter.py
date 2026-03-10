@@ -43,7 +43,9 @@ class JSONFormatter(logging.Formatter):
         super().__init__()
         self.pretty = pretty
 
-    def formatTime(self, record: logging.LogRecord, datefmt: Any = None) -> str:
+    def formatTime(  # noqa: N802
+        self, record: logging.LogRecord, datefmt: Any = None
+    ) -> str:
         """Format timestamp in ISO format."""
         dt = datetime.fromtimestamp(record.created, UTC)
         return dt.isoformat()

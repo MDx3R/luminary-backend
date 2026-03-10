@@ -3,24 +3,22 @@ from uuid import uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
+from tests.unit.assistant.utils import make_assistant
 
-from luminary.assistant.domain.entity.assistant import AssistantId
+from luminary.assistant.domain.entity.assistant import Assistant, AssistantId
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_repository import (
     AssistantRepository,
 )
-from tests.unit.assistant.utils import make_assistant
 
 
 @pytest.mark.asyncio
 class TestAssistantRepository:
     @pytest.fixture(autouse=True)
-    def setup(
-        self, maker, query_executor: QueryExecutor
-    ):
+    def setup(self, maker, query_executor: QueryExecutor):
         self.maker = maker
         self.repository = AssistantRepository(query_executor)
 
-    async def _add_assistant(self):
+    async def _add_assistant(self) -> Assistant:
         assistant = make_assistant()
         await self.repository.add(assistant)
         return assistant
