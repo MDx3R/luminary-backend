@@ -4,6 +4,13 @@ from typing import Any
 
 from dependency_injector import containers, providers
 
+from luminary.chat.application.handlers.assistant_deleted_handler import (
+    ChatAssistantDeletedHandler,
+)
+from luminary.chat.application.handlers.source_deleted_handler import (
+    ChatSourceDeletedHandler,
+    ChatSourceRemovedHandler,
+)
 from luminary.chat.application.policies.chat_access_policy import (
     ChatAccessPolicy,
 )
@@ -157,4 +164,15 @@ class ChatContainer(containers.DeclarativeContainer):
         DeleteChatUseCase,
         repository=event_bus_chat_repository,
         access_policy=chat_access_policy,
+    )
+
+    assistant_deleted_handler = providers.Singleton(
+        ChatAssistantDeletedHandler, chat_repository=event_bus_chat_repository
+    )
+
+    source_deleted_handler = providers.Singleton(
+        ChatSourceDeletedHandler, chat_repository=event_bus_chat_repository
+    )
+    source_removed_handler = providers.Singleton(
+        ChatSourceRemovedHandler, chat_repository=event_bus_chat_repository
     )

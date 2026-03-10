@@ -1,6 +1,6 @@
 """Application entry point."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -10,11 +10,13 @@ from bootstrap.utils import log_config
 from common.infrastructure.database.sqlalchemy.database import Database
 from common.infrastructure.di.container.common import CommonContainer
 from common.infrastructure.logger.logging.logger_factory import LoggerFactory
+from common.infrastructure.queues.faststream.event_bus import FastStreamRabbitMQEventBus
 from common.infrastructure.queues.faststream.utils import create_rabbit
 from common.infrastructure.storage.minio.client import MinioStorage
 from common.infrastructure.storage.qdrant.client import QdrantStore
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from faststream.rabbit import RabbitRoute, RabbitRouter
 from idp.auth.application.interfaces.usecases.command.login_use_case import (
     ILoginUseCase,
 )
@@ -52,6 +54,7 @@ from luminary.assistant.application.interfaces.usecases.command.update_assistant
 from luminary.assistant.application.interfaces.usecases.command.update_assistant_instructions_use_case import (
     IUpdateAssistantInstructionsUseCase,
 )
+from luminary.assistant.domain.events.events import AssistantDeletedEvent
 from luminary.assistant.infrastructure.di.container import AssistantContainer
 from luminary.assistant.presentation.http.fastapi.controllers import (
     command_router as assistant_command_router,
@@ -89,6 +92,7 @@ from luminary.chat.application.interfaces.usecases.command.update_chat_name_use_
 from luminary.chat.application.interfaces.usecases.command.update_chat_settings_use_case import (
     IUpdateChatSettingsUseCase,
 )
+from luminary.chat.domain.events.events import ChatDeletedEvent, ChatSourceRemovedEvent
 from luminary.chat.infrastructure.di.container import ChatContainer
 from luminary.chat.presentation.http.fastapi.controllers import (
     command_router as chat_command_router,
@@ -124,6 +128,10 @@ from luminary.folder.application.interfaces.usecases.command.update_editor_conte
 from luminary.folder.application.interfaces.usecases.command.update_folder_info_use_case import (
     IUpdateFolderInfoUseCase,
 )
+from luminary.folder.domain.events.events import (
+    FolderChatRemovedEvent,
+    FolderSourceRemovedEvent,
+)
 from luminary.folder.infrastructure.di.container import FolderContainer
 from luminary.folder.presentation.http.fastapi.controllers import (
     command_router as folder_command_router,
@@ -134,6 +142,11 @@ from luminary.source.application.interfaces.usecases.command.create_source_use_c
     ICreateFileSourceUseCase,
     ICreateLinkSourceUseCase,
     ICreatePageSourceUseCase,
+)
+from luminary.source.domain.events.events import (
+    SourceCreatedEvent,
+    SourceDeletedEvent,
+    SourceFetchedEvent,
 )
 from luminary.source.infrastructure.di.container import SourceContainer
 from luminary.source.presentation.http.fastapi.controllers import (
@@ -181,6 +194,79 @@ logger = LoggerFactory.create(None, config.env, config.logger)
 logger.info("logger initialized")
 
 log_config(logger, config)
+
+
+def create_source_routes(
+    event_bus: FastStreamRabbitMQEventBus, container: SourceContainer
+) -> Sequence[RabbitRoute]:
+    return [
+        event_bus.build_route(
+            event_bus.prefix, SourceCreatedEvent, container.source_created_handler()
+        ),
+        event_bus.build_route(
+            event_bus.prefix, SourceFetchedEvent, container.source_fetched_handler()
+        ),
+    ]
+
+
+def create_folder_routes(
+    event_bus: FastStreamRabbitMQEventBus, container: FolderContainer
+) -> Sequence[RabbitRoute]:
+    return [
+        event_bus.build_route(
+            event_bus.prefix,
+            SourceDeletedEvent,
+            container.source_deleted_handler(),
+        ),
+        event_bus.build_route(
+            event_bus.prefix,
+            FolderSourceRemovedEvent,
+            container.source_removed_handler(),
+        ),
+        event_bus.build_route(
+            event_bus.prefix, ChatDeletedEvent, container.chat_deleted_handler()
+        ),
+        event_bus.build_route(
+            event_bus.prefix, FolderChatRemovedEvent, container.chat_removed_handler()
+        ),
+        event_bus.build_route(
+            event_bus.prefix,
+            FolderChatRemovedEvent,
+            container.chat_removed_association_handler(),
+        ),
+        event_bus.build_route(
+            event_bus.prefix,
+            FolderChatRemovedEvent,
+            container.chat_removed_association_handler(),
+        ),
+        event_bus.build_route(
+            event_bus.prefix,
+            AssistantDeletedEvent,
+            container.assistant_deleted_handler(),
+        ),
+    ]
+
+
+def create_chat_routes(
+    event_bus: FastStreamRabbitMQEventBus, container: ChatContainer
+) -> Sequence[RabbitRoute]:
+    return [
+        event_bus.build_route(
+            event_bus.prefix,
+            SourceDeletedEvent,
+            container.source_deleted_handler(),
+        ),
+        event_bus.build_route(
+            event_bus.prefix,
+            ChatSourceRemovedEvent,
+            container.source_removed_handler(),
+        ),
+        event_bus.build_route(
+            event_bus.prefix,
+            AssistantDeletedEvent,
+            container.assistant_deleted_handler(),
+        ),
+    ]
 
 
 def main() -> FastAPI:  # noqa: PLR0915
@@ -305,6 +391,7 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
 
     file_type_introspector = file_container.file_type_introspector
+    file_service = file_container.file_service
 
     content_container = ContentContainer(
         bucket_name=CONTENT_BUCKET,
@@ -326,13 +413,17 @@ def main() -> FastAPI:  # noqa: PLR0915
 
     content_container.file_content_extractor.override(model_container.content_extractor)
 
+    embedding_service = model_container.embedding_service
+
     source_container = SourceContainer(
         clock=clock,
         uuid_generator=uuid_generator,
         query_executor=query_executor,
         unit_of_work=unit_of_work,
         event_bus=event_bus,
+        file_service=file_service,
         content_service=content_service,
+        embedding_service=embedding_service,
     )
 
     assistant_container = AssistantContainer(
@@ -349,8 +440,8 @@ def main() -> FastAPI:  # noqa: PLR0915
         query_executor=query_executor,
         unit_of_work=unit_of_work,
         event_bus=event_bus,
-        inference_engine=model_container.inference_engine(),
-        assistant_repository=assistant_container.event_bus_assistant_repository(),
+        inference_engine=model_container.inference_engine,
+        assistant_repository=assistant_container.event_bus_assistant_repository,
     )
 
     folder_container = FolderContainer(
@@ -359,9 +450,18 @@ def main() -> FastAPI:  # noqa: PLR0915
         query_executor=query_executor,
         unit_of_work=unit_of_work,
         event_bus=event_bus,
-        chat_factory=chat_container.chat_factory(),
-        chat_repository=chat_container.event_bus_chat_repository(),
+        chat_factory=chat_container.chat_factory,
+        chat_repository=chat_container.event_bus_chat_repository,
     )
+
+    router = RabbitRouter(
+        handlers=[
+            *create_source_routes(event_bus(), source_container),
+            *create_folder_routes(event_bus(), folder_container),
+            *create_chat_routes(event_bus(), chat_container),
+        ]
+    )
+    broker.include_router(router)
 
     # Register routes
     server.dependency_overrides[IFileService] = lambda: file_container.file_service()

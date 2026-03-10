@@ -4,6 +4,18 @@ from typing import Any
 
 from dependency_injector import containers, providers
 
+from luminary.folder.application.handlers.assistant_deleted_handler import (
+    FolderAssistantDeletedHandler,
+)
+from luminary.folder.application.handlers.chat_deleted_handler import (
+    FolderChatDeletedHandler,
+    FolderChatRemovedAssociationHandler,
+    FolderChatRemovedHandler,
+)
+from luminary.folder.application.handlers.source_deleted_handler import (
+    FolderSourceDeletedHandler,
+    FolderSourceRemovedHandler,
+)
 from luminary.folder.application.policies.folder_access_policy import (
     FolderAccessPolicy,
 )
@@ -124,4 +136,27 @@ class FolderContainer(containers.DeclarativeContainer):
         repository=event_bus_folder_repository,
         access_policy=folder_access_policy,
         clock=clock,
+    )
+
+    source_deleted_handler = providers.Singleton(
+        FolderSourceDeletedHandler, folder_repository=event_bus_folder_repository
+    )
+    source_removed_handler = providers.Singleton(
+        FolderSourceRemovedHandler,
+        folder_repository=event_bus_folder_repository,
+    )
+
+    chat_deleted_handler = providers.Singleton(
+        FolderChatDeletedHandler, folder_repository=event_bus_folder_repository
+    )
+    chat_removed_association_handler = providers.Singleton(
+        FolderChatRemovedAssociationHandler,
+        folder_repository=event_bus_folder_repository,
+    )
+    chat_removed_handler = providers.Singleton(
+        FolderChatRemovedHandler, chat_repository=chat_repository
+    )
+
+    assistant_deleted_handler = providers.Singleton(
+        FolderAssistantDeletedHandler, folder_repository=event_bus_folder_repository
     )

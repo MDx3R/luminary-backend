@@ -41,3 +41,8 @@ class EventBusChatRepository(IChatRepository):
 
     async def clear_source_reference(self, source_id: SourceId) -> None:
         await self.repository.clear_source_reference(source_id)
+
+    async def clear_source_association(
+        self, chat_id: ChatId, source_id: SourceId
+    ) -> None:
+        await self.repository.clear_source_association(chat_id, source_id)

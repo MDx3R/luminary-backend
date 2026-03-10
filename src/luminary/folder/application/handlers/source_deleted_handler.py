@@ -19,7 +19,7 @@ class FolderSourceDeletedHandler(IEventHandler[SourceDeletedEvent]):
         await self.folder_repository.clear_source_reference(SourceId(event.source_id))
 
 
-class FolderSourceRemovedAssociationHandler(IEventHandler[FolderSourceRemovedEvent]):
+class FolderSourceRemovedHandler(IEventHandler[FolderSourceRemovedEvent]):
     """Remove source association when folder source is removed from folder."""
 
     def __init__(self, folder_repository: IFolderRepository) -> None:

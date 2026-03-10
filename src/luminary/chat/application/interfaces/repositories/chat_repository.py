@@ -21,3 +21,8 @@ class IChatRepository(ABC):
 
     @abstractmethod
     async def clear_source_reference(self, source_id: SourceId) -> None: ...
+
+    @abstractmethod
+    async def clear_source_association(
+        self, chat_id: ChatId, source_id: SourceId
+    ) -> None: ...

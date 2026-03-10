@@ -4,6 +4,12 @@ from typing import Any
 
 from dependency_injector import containers, providers
 
+from luminary.source.application.handlers.source_created_handler import (
+    SourceCreatedHandler,
+)
+from luminary.source.application.handlers.source_fetched_handler import (
+    SourceFetchedHandler,
+)
 from luminary.source.application.policies.source_access_policy import SourceAccessPolicy
 from luminary.source.application.repositories.source_repository import (
     EventBusSourceRepository,
@@ -36,7 +42,9 @@ class SourceContainer(containers.DeclarativeContainer):
     unit_of_work: providers.Dependency[Any] = providers.Dependency()
     event_bus: providers.Dependency[Any] = providers.Dependency()
 
+    file_service: providers.Dependency[Any] = providers.Dependency()
     content_service: providers.Dependency[Any] = providers.Dependency()
+    embedding_service: providers.Dependency[Any] = providers.Dependency()
 
     # Domain services
     source_factory = providers.Singleton(
@@ -83,4 +91,19 @@ class SourceContainer(containers.DeclarativeContainer):
         DeleteSourceUseCase,
         repository=event_bus_source_repository,
         access_policy=source_access_policy,
+    )
+
+    source_created_handler = providers.Singleton(
+        SourceCreatedHandler,
+        clock=clock,
+        source_repository=event_bus_source_repository,
+        content_service=content_service,
+        file_service=file_service,
+    )
+    source_fetched_handler = providers.Singleton(
+        SourceFetchedHandler,
+        clock=clock,
+        source_repository=event_bus_source_repository,
+        content_service=content_service,
+        embedding_service=embedding_service,
     )
