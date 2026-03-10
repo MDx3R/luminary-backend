@@ -4,7 +4,7 @@ import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from tests.intergration.sqlalchemy.utils import add_assistant
+from tests.integration.sqlalchemy.utils import add_assistant
 from tests.unit.assistant.utils import make_assistant
 
 from luminary.assistant.domain.entity.assistant import AssistantId

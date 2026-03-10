@@ -8,7 +8,7 @@ from common.application.interfaces.handlers.handler import IEventHandler
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 from common.infrastructure.queues.faststream.event_bus import FastStreamRabbitMQEventBus
 from faststream.rabbit import RabbitBroker, RabbitRouter, TestRabbitBroker
-from tests.intergration.faststream.rabbitmq.conftest import PREFIX, MockEvent
+from tests.integration.faststream.rabbitmq.conftest import PREFIX, MockEvent
 
 
 @pytest.mark.asyncio

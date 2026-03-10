@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from tests.intergration.sqlalchemy.utils import add_assistant, persist_assistant
+from tests.integration.sqlalchemy.utils import add_assistant, persist_assistant
 from tests.unit.assistant.utils import make_assistant
 
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_read_repository import (

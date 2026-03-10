@@ -6,19 +6,18 @@ from common.domain.value_objects.title import Title
 from common.domain.value_objects.url import Url
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests.integration.sqlalchemy.utils import (
+    add_file_source,
+    add_link_source,
+    add_page_source,
+)
 from tests.unit.source.utils import make_file_source, make_link_source, make_page_source
 
-from luminary.source.domain.entity.file_source import FileSource
 from luminary.source.domain.entity.link_source import LinkSource
 from luminary.source.domain.entity.page_source import PageSource
 from luminary.source.domain.entity.source import SourceId
 from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_repository import (
     SourceRepository,
-)
-from tests.intergration.sqlalchemy.utils import (
-    add_file_source,
-    add_link_source,
-    add_page_source,
 )
 
 

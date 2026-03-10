@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from tests.intergration.sqlalchemy.utils import (
+from tests.integration.sqlalchemy.utils import (
     add_assistant,
     add_chat,
     add_message,
@@ -195,9 +195,7 @@ class TestChatReadRepository:
         chat = await self._add_chat()
 
         # Act
-        result = await self.read_repo.list_messages(
-            chat.id.value, chat.owner_id.value
-        )
+        result = await self.read_repo.list_messages(chat.id.value, chat.owner_id.value)
 
         # Assert
         assert list(result) == []
@@ -278,9 +276,7 @@ class TestChatReadRepository:
         await self.query_executor.add(att)
 
         # Act
-        result = await self.read_repo.list_messages(
-            chat.id.value, chat.owner_id.value
-        )
+        result = await self.read_repo.list_messages(chat.id.value, chat.owner_id.value)
 
         # Assert
         assert {r.id for r in result} == {message.id.value}

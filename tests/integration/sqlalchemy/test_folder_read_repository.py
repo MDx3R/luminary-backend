@@ -7,9 +7,8 @@ import pytest
 from common.application.exceptions import NotFoundError
 from common.domain.value_objects.datetime import DateTime
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from tests.intergration.sqlalchemy.utils import (
+from tests.integration.sqlalchemy.utils import (
     add_assistant,
-    add_chat,
     add_folder,
     persist_chat,
     persist_folder,

@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
-from tests.intergration.sqlalchemy.utils import (
+from tests.integration.sqlalchemy.utils import (
     add_file_source,
     add_link_source,
     add_page_source,
@@ -136,15 +136,9 @@ class TestSourceReadRepository:
     ) -> None:
         # Arrange
         owner_id = uuid4()
-        s1 = await add_file_source(
-            maker=self.maker, owner_id=owner_id, title="First"
-        )
-        s2 = await add_link_source(
-            maker=self.maker, owner_id=owner_id, title="Second"
-        )
-        s3 = await add_page_source(
-            maker=self.maker, owner_id=owner_id, title="Third"
-        )
+        s1 = await add_file_source(maker=self.maker, owner_id=owner_id, title="First")
+        s2 = await add_link_source(maker=self.maker, owner_id=owner_id, title="Second")
+        s3 = await add_page_source(maker=self.maker, owner_id=owner_id, title="Third")
 
         # Act
         result = await self.read_repo.list_by_owner(owner_id)

@@ -4,7 +4,7 @@ import pytest
 from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from tests.intergration.sqlalchemy.utils import add_chat
+from tests.integration.sqlalchemy.utils import add_chat
 from tests.unit.chat.utils import make_chat
 
 from luminary.chat.domain.value_objects.chat_id import ChatId
