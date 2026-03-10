@@ -1,5 +1,9 @@
 from common.domain.value_objects.datetime import DateTime
 
+from luminary.chat.application.dtos.read_models import (
+    AttachmentReadModel,
+    MessageReadModel,
+)
 from luminary.chat.domain.entity.attachment import Attachment
 from luminary.chat.domain.entity.message import Message
 from luminary.chat.domain.value_objects.chat_id import ChatId
@@ -40,4 +44,27 @@ class MessageMapper:
             edited_at=message.edited_at.value,
             created_at=message.created_at.value,
             updated_at=message.edited_at.value,
+        )
+
+
+class MessageReadMapper:
+    @classmethod
+    def to_read(cls, base: MessageBase) -> MessageReadModel:
+        attachments = [
+            AttachmentReadModel(
+                name=a.name, content_id=a.content_id, source_id=a.source_id
+            )
+            for a in base.attachments
+        ]
+        return MessageReadModel(
+            id=base.message_id,
+            chat_id=base.chat_id,
+            role=base.role.value,
+            status=base.status.value,
+            content=base.content,
+            model_id=base.model_id,
+            tokens=base.tokens,
+            created_at=base.created_at,
+            edited_at=base.edited_at,
+            attachments=attachments,
         )

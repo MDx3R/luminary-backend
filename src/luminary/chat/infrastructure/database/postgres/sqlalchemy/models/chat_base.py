@@ -3,10 +3,17 @@ from __future__ import annotations
 from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, ColumnElement, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ColumnElement, ForeignKey, Integer, String, and_
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
+
+from luminary.assistant.infrastructure.database.postgres.sqlalchemy.models.assistant_base import (
+    AssistantBase,
+)
+from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
+    SourceBase,
+)
 
 
 class ChatSourceAssociation(Base):
@@ -32,6 +39,23 @@ class ChatBase(Base):
 
     source_associations: Mapped[list[ChatSourceAssociation]] = relationship(
         "ChatSourceAssociation", lazy="noload"
+    )
+    sources: Mapped[list[SourceBase]] = relationship(
+        "SourceBase",
+        secondary="chat_sources",
+        primaryjoin=and_(chat_id == ChatSourceAssociation.chat_id),
+        secondaryjoin=and_(
+            SourceBase.source_id == ChatSourceAssociation.source_id,
+            SourceBase.is_active,
+        ),
+        lazy="noload",
+        viewonly=True,
+    )
+    assistant: Mapped[AssistantBase | None] = relationship(
+        "AssistantBase",
+        primaryjoin=and_(foreign(assistant_id) == AssistantBase.assistant_id),
+        lazy="noload",
+        viewonly=True,
     )
 
     @hybrid_property

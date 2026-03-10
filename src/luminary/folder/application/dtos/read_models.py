@@ -1,5 +1,6 @@
 """Read models for Folder bounded context (query side)."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
@@ -13,6 +14,9 @@ class FolderSourceItem:
     title: str
     type: str
     fetch_status: str
+    url: str | None = None
+    file_id: UUID | None = None
+    editable: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -43,8 +47,8 @@ class FolderReadModel:
     assistant_id: UUID | None
     assistant_name: str | None
     editor: FolderEditorItem | None
-    chats: tuple[FolderChatItem, ...]
-    sources: tuple[FolderSourceItem, ...]
+    chats: Sequence[FolderChatItem]
+    sources: Sequence[FolderSourceItem]
     created_at: datetime
 
 

@@ -4,10 +4,20 @@ from datetime import datetime
 from uuid import UUID
 
 from common.infrastructure.database.sqlalchemy.models.base import Base
-from sqlalchemy import Boolean, ColumnElement, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, ColumnElement, DateTime, ForeignKey, String, Text, and_
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
+
+from luminary.assistant.infrastructure.database.postgres.sqlalchemy.models.assistant_base import (
+    AssistantBase,
+)
+from luminary.chat.infrastructure.database.postgres.sqlalchemy.models.chat_base import (
+    ChatBase,
+)
+from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
+    SourceBase,
+)
 
 
 class FolderChatAssociation(Base):
@@ -47,6 +57,34 @@ class FolderBase(Base):
     )
     source_associations: Mapped[list[FolderSourceAssociation]] = relationship(
         "FolderSourceAssociation", lazy="noload"
+    )
+    assistant: Mapped[AssistantBase | None] = relationship(
+        "AssistantBase",
+        primaryjoin=and_(foreign(assistant_id) == AssistantBase.assistant_id),
+        lazy="noload",
+        viewonly=True,
+    )
+    chats: Mapped[list[ChatBase]] = relationship(
+        "ChatBase",
+        secondary="folder_chats",
+        primaryjoin=and_(folder_id == FolderChatAssociation.folder_id),
+        secondaryjoin=and_(
+            ChatBase.chat_id == FolderChatAssociation.chat_id,
+            ChatBase.is_active,
+        ),
+        lazy="noload",
+        viewonly=True,
+    )
+    sources: Mapped[list[SourceBase]] = relationship(
+        "SourceBase",
+        secondary="folder_sources",
+        primaryjoin=and_(folder_id == FolderSourceAssociation.folder_id),
+        secondaryjoin=and_(
+            SourceBase.source_id == FolderSourceAssociation.source_id,
+            SourceBase.is_active,
+        ),
+        lazy="noload",
+        viewonly=True,
     )
 
     @hybrid_property

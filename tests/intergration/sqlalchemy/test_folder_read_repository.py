@@ -10,7 +10,7 @@ from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.unit.assistant.utils import make_assistant
 from tests.unit.chat.utils import make_chat
 from tests.unit.folder.utils import make_folder
-from tests.unit.source.utils import make_file_source
+from tests.unit.source.utils import make_file_source, make_link_source, make_page_source
 
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_repository import (
     AssistantRepository,
@@ -25,7 +25,10 @@ from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.fo
 from luminary.folder.infrastructure.database.postgres.sqlalchemy.repositories.folder_repository import (
     FolderRepository,
 )
-from luminary.source.domain.entity.source import SourceId
+from luminary.source.domain.entity.file_source import FileSource
+from luminary.source.domain.entity.link_source import LinkSource
+from luminary.source.domain.entity.page_source import PageSource
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_repository import (
     SourceRepository,
 )
@@ -61,8 +64,8 @@ class TestFolderReadRepository:
         assert result.assistant_id is None
         assert result.assistant_name is None
         assert result.editor is None
-        assert result.chats == ()
-        assert result.sources == ()
+        assert result.chats == []
+        assert result.sources == []
 
     async def test_get_by_id_with_editor_returns_editor_item(self) -> None:
         folder = await self._add_folder()
@@ -78,11 +81,13 @@ class TestFolderReadRepository:
         assert result.editor is not None
         assert result.editor.text == "Editor text"
 
+    @pytest.mark.parametrize(
+        "source", [make_file_source(), make_page_source(), make_link_source()]
+    )
     async def test_get_by_id_with_chats_and_sources_returns_items(
-        self,
+        self, source: Source
     ) -> None:
-        owner_id = uuid4()
-        source = make_file_source(owner_id=owner_id)
+        owner_id = source.owner_id.value
         await self.source_repo.add(source)
         chat = make_chat(user_id=owner_id)
         await self.chat_repo.add(chat)
@@ -99,6 +104,15 @@ class TestFolderReadRepository:
         assert len(result.sources) == 1
         assert result.sources[0].id == source.id.value
         assert result.sources[0].title == source.title.value
+        assert result.sources[0].type == source.type.value
+
+        match source:
+            case FileSource():
+                assert result.sources[0].file_id == source.file_id.value
+            case PageSource():
+                assert result.sources[0].editable == source.editable
+            case LinkSource():
+                assert result.sources[0].url == source.url.value
 
     async def test_get_by_id_with_assistant_returns_assistant_name(
         self,

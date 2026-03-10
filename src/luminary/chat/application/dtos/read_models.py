@@ -1,5 +1,6 @@
 """Read models for Chat bounded context (query side)."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
@@ -13,6 +14,9 @@ class ChatSourceItem:
     title: str
     type: str
     fetch_status: str
+    url: str | None = None
+    file_id: UUID | None = None
+    editable: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -26,7 +30,7 @@ class ChatReadModel:
     assistant_name: str | None
     model_id: UUID
     max_context_messages: int
-    sources: tuple[ChatSourceItem, ...]
+    sources: Sequence[ChatSourceItem]
     created_at: datetime
 
 
@@ -62,4 +66,4 @@ class MessageReadModel:
     tokens: int | None
     created_at: datetime
     edited_at: datetime
-    attachments: tuple[AttachmentReadModel, ...]
+    attachments: Sequence[AttachmentReadModel]

@@ -14,6 +14,9 @@ from luminary.assistant.application.dtos.read_models import (
 from luminary.assistant.application.interfaces.repositories.assistant_read_repository import (
     IAssistantReadRepository,
 )
+from luminary.assistant.infrastructure.database.postgres.sqlalchemy.mappers.assistant_mapper import (
+    AssistantReadMapper,
+)
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.models.assistant_base import (
     AssistantBase,
 )
@@ -33,14 +36,7 @@ class AssistantReadRepository(IAssistantReadRepository):
         row = await self._executor.execute_scalar_one(stmt)
         if not row:
             raise NotFoundError(str(assistant_id))
-        return AssistantReadModel(
-            id=row.assistant_id,
-            name=row.name,
-            description=row.description,
-            type=row.type.value,
-            prompt=row.prompt,
-            created_at=row.created_at,
-        )
+        return AssistantReadMapper.to_read(row)
 
     async def list_by_owner(
         self, owner_id: UUID
@@ -52,12 +48,4 @@ class AssistantReadRepository(IAssistantReadRepository):
             .order_by(AssistantBase.created_at.desc())
         )
         rows = await self._executor.execute_scalar_many(stmt)
-        return [
-            AssistantSummaryReadModel(
-                id=r.assistant_id,
-                name=r.name,
-                description=r.description,
-                type=r.type.value,
-            )
-            for r in rows
-        ]
+        return [AssistantReadMapper.to_summary(r) for r in rows]

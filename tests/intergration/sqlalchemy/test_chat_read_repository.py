@@ -7,7 +7,7 @@ from common.application.exceptions import NotFoundError
 from common.infrastructure.database.sqlalchemy.executor import QueryExecutor
 from tests.unit.assistant.utils import make_assistant
 from tests.unit.chat.utils import make_chat, make_message
-from tests.unit.source.utils import make_file_source
+from tests.unit.source.utils import make_file_source, make_link_source, make_page_source
 
 from luminary.assistant.infrastructure.database.postgres.sqlalchemy.repositories.assistant_repository import (
     AssistantRepository,
@@ -24,7 +24,10 @@ from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.chat
 from luminary.chat.infrastructure.database.postgres.sqlalchemy.repositories.message_repository import (
     MessageRepository,
 )
-from luminary.source.domain.entity.source import SourceId
+from luminary.source.domain.entity.file_source import FileSource
+from luminary.source.domain.entity.link_source import LinkSource
+from luminary.source.domain.entity.page_source import PageSource
+from luminary.source.domain.entity.source import Source, SourceId
 from luminary.source.infrastructure.database.postgres.sqlalchemy.repositories.source_repository import (
     SourceRepository,
 )
@@ -69,11 +72,15 @@ class TestChatReadRepository:
         assert result.folder_id is None
         assert result.assistant_id is None
         assert result.assistant_name is None
-        assert result.sources == ()
+        assert result.sources == []
 
-    async def test_get_by_id_with_sources_returns_source_items(self) -> None:
-        owner_id = uuid4()
-        source = make_file_source(owner_id=owner_id)
+    @pytest.mark.parametrize(
+        "source", [make_file_source(), make_page_source(), make_link_source()]
+    )
+    async def test_get_by_id_with_sources_returns_source_items(
+        self, source: Source
+    ) -> None:
+        owner_id = source.owner_id.value
         await self.source_repo.add(source)
         chat = make_chat(user_id=owner_id)
         chat.add_source(SourceId(source.id.value))
@@ -84,7 +91,15 @@ class TestChatReadRepository:
         assert len(result.sources) == 1
         assert result.sources[0].id == source.id.value
         assert result.sources[0].title == source.title.value
-        assert result.sources[0].type == "file"
+        assert result.sources[0].type == source.type.value
+
+        match source:
+            case FileSource():
+                assert result.sources[0].file_id == source.file_id.value
+            case PageSource():
+                assert result.sources[0].editable == source.editable
+            case LinkSource():
+                assert result.sources[0].url == source.url.value
 
     async def test_get_by_id_with_assistant_returns_assistant_name(self) -> None:
         owner_id = uuid4()

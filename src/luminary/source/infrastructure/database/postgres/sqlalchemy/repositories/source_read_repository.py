@@ -12,26 +12,12 @@ from luminary.source.application.dtos.read_models import SourceReadModel
 from luminary.source.application.interfaces.repositories.source_read_repository import (
     ISourceReadRepository,
 )
+from luminary.source.infrastructure.database.postgres.sqlalchemy.mappers.source_mapper import (
+    SourceReadMapper,
+)
 from luminary.source.infrastructure.database.postgres.sqlalchemy.models.source_base import (
     SourceBase,
 )
-
-
-def _orm_to_read_model(orm: SourceBase) -> SourceReadModel:
-    """Map polymorphic source ORM to SourceReadModel; subtype fields via getattr."""
-    url = getattr(orm, "url", None)
-    file_id = getattr(orm, "file_id", None)
-    editable = getattr(orm, "editable", None)
-    return SourceReadModel(
-        id=orm.source_id,
-        title=orm.title,
-        type=orm.type.value,
-        fetch_status=orm.fetch_status.value,
-        created_at=orm.created_at,
-        url=url,
-        file_id=file_id,
-        editable=editable,
-    )
 
 
 class SourceReadRepository(ISourceReadRepository):
@@ -49,7 +35,7 @@ class SourceReadRepository(ISourceReadRepository):
         row = await self._executor.execute_scalar_one(stmt)
         if not row:
             raise NotFoundError(str(source_id))
-        return _orm_to_read_model(row)
+        return SourceReadMapper.to_read(row)
 
     async def list_by_owner(self, owner_id: UUID) -> Sequence[SourceReadModel]:
         poly = with_polymorphic(SourceBase, "*")
@@ -60,4 +46,4 @@ class SourceReadRepository(ISourceReadRepository):
             .order_by(poly.created_at.desc())
         )
         rows = await self._executor.execute_scalar_many(stmt)
-        return [_orm_to_read_model(r) for r in rows]
+        return [SourceReadMapper.to_read(r) for r in rows]
