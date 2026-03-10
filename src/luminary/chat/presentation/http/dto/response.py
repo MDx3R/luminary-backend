@@ -22,6 +22,9 @@ class ChatSourceItemResponse(BaseModel):
     title: str
     type: str
     fetch_status: str
+    url: str | None
+    file_id: UUID | None
+    editable: bool | None
 
     @classmethod
     def from_read_model(cls, model: ChatSourceItem) -> "ChatSourceItemResponse":
@@ -30,6 +33,9 @@ class ChatSourceItemResponse(BaseModel):
             title=model.title,
             type=model.type,
             fetch_status=model.fetch_status,
+            url=model.url,
+            file_id=model.file_id,
+            editable=model.editable,
         )
 
 

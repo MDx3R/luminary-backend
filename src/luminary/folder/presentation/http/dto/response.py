@@ -19,6 +19,9 @@ class FolderSourceItemResponse(BaseModel):
     title: str
     type: str
     fetch_status: str
+    url: str | None
+    file_id: UUID | None
+    editable: bool | None
 
     @classmethod
     def from_read_model(cls, model: FolderSourceItem) -> "FolderSourceItemResponse":
@@ -27,6 +30,9 @@ class FolderSourceItemResponse(BaseModel):
             title=model.title,
             type=model.type,
             fetch_status=model.fetch_status,
+            url=model.url,
+            file_id=model.file_id,
+            editable=model.editable,
         )
 
 
@@ -77,9 +83,11 @@ class FolderResponse(BaseModel):
             description=model.description,
             assistant_id=model.assistant_id,
             assistant_name=model.assistant_name,
-            editor=FolderEditorItemResponse.from_read_model(model.editor)
-            if model.editor
-            else None,
+            editor=(
+                FolderEditorItemResponse.from_read_model(model.editor)
+                if model.editor
+                else None
+            ),
             chats=[FolderChatItemResponse.from_read_model(c) for c in model.chats],
             sources=[
                 FolderSourceItemResponse.from_read_model(s) for s in model.sources
