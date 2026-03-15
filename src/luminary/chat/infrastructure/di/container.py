@@ -103,7 +103,6 @@ class ChatContainer(containers.DeclarativeContainer):
         MessageFactory, clock=clock, uuid_generator=uuid_generator
     )
     message_repository = providers.Singleton(MessageRepository, query_executor)
-    message_reader = providers.Object(message_repository)
     event_bus_message_repository = providers.Singleton(
         EventBusMessageRepository,
         uow=unit_of_work,
@@ -127,7 +126,7 @@ class ChatContainer(containers.DeclarativeContainer):
         inference_engine=inference_engine,
         chat_repository=event_bus_chat_repository,
         assistant_repository=assistant_repository,
-        message_reader=message_reader,
+        message_reader=message_repository,
         message_repository=event_bus_message_repository,
         chat_access_policy=chat_access_policy,
     )

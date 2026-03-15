@@ -366,6 +366,7 @@ def main() -> FastAPI:  # noqa: PLR0915
         await storage.ensure_bucket()
         await storage.ensure_bucket(FILES_BUCKET)
         await storage.ensure_bucket(CONTENT_BUCKET)
+        await qdrant_store.ensure_collection()
 
         yield
         logger.info("application shutdown begins")

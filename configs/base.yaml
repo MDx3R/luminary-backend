@@ -45,3 +45,4 @@ qdrant:
   collection_name: "luminary_sources"
   endpoint_url: "http://qdrant:6333"
   secret_key: "secret-key"
+  vector_size: 1536
