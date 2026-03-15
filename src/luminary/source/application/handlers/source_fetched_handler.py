@@ -36,7 +36,7 @@ class SourceFetchedHandler(IEventHandler[SourceFetchedEvent]):
     async def handle(self, event: SourceFetchedEvent) -> None:
         source = await self.source_repository.get_by_id(SourceId(event.source_id))
 
-        if source.is_embedded() or not source.content_id:
+        if not source.can_be_embedded() or not source.content_id:
             return
 
         content = await self.content_service.get_content(
