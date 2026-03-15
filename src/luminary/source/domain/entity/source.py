@@ -53,8 +53,8 @@ class Source(Entity):
     def can_be_fetched(self) -> bool:
         return self.fetch_status == FetchStatus.NOT_FETCHED
 
-    def is_embedded(self) -> bool:
-        return self.fetch_status == FetchStatus.EMBEDDED
+    def can_be_embedded(self) -> bool:
+        return self.fetch_status == FetchStatus.FETCHED
 
     def fetch(self, content_id: ContentId, fetched_at: DateTime) -> None:
         self.content_id = content_id
