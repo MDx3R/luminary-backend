@@ -88,7 +88,7 @@ class FolderCommandController:
     @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
         self,
-        request: Annotated[CreateFolderRequest, Depends()],
+        request: CreateFolderRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         folder_id = await self.create_folder_use_case.execute(
@@ -108,7 +108,7 @@ class FolderCommandController:
     async def update_info(
         self,
         folder_id: UUID,
-        request: Annotated[UpdateFolderInfoRequest, Depends()],
+        request: UpdateFolderInfoRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_folder_info_use_case.execute(
@@ -140,7 +140,7 @@ class FolderCommandController:
     async def change_assistant(
         self,
         folder_id: UUID,
-        request: Annotated[ChangeFolderAssistantRequest, Depends()],
+        request: ChangeFolderAssistantRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.change_folder_assistant_use_case.execute(
@@ -173,7 +173,7 @@ class FolderCommandController:
     async def add_source(
         self,
         folder_id: UUID,
-        request: Annotated[AddSourceToFolderRequest, Depends()],
+        request: AddSourceToFolderRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.add_source_to_folder_use_case.execute(
@@ -206,7 +206,7 @@ class FolderCommandController:
     async def create_chat(
         self,
         folder_id: UUID,
-        request: Annotated[CreateFolderChatRequest, Depends()],
+        request: CreateFolderChatRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         chat_id = await self.create_folder_chat_use_case.execute(
@@ -246,7 +246,7 @@ class FolderCommandController:
     async def update_editor(
         self,
         folder_id: UUID,
-        request: Annotated[UpdateEditorContentRequest, Depends()],
+        request: UpdateEditorContentRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_editor_content_use_case.execute(

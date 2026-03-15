@@ -101,7 +101,7 @@ class ChatCommandController:
     @command_router.post("/", status_code=status.HTTP_201_CREATED)
     async def create(
         self,
-        request: Annotated[CreateChatRequest, Depends()],
+        request: CreateChatRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         chat_id = await self.create_chat_use_case.execute(
@@ -123,7 +123,7 @@ class ChatCommandController:
     async def update_name(
         self,
         chat_id: UUID,
-        request: Annotated[UpdateChatNameRequest, Depends()],
+        request: UpdateChatNameRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_chat_name_use_case.execute(
@@ -139,7 +139,7 @@ class ChatCommandController:
     async def update_settings(
         self,
         chat_id: UUID,
-        request: Annotated[UpdateChatSettingsRequest, Depends()],
+        request: UpdateChatSettingsRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_chat_settings_use_case.execute(
@@ -158,7 +158,7 @@ class ChatCommandController:
     async def change_assistant(
         self,
         chat_id: UUID,
-        request: Annotated[ChangeChatAssistantRequest, Depends()],
+        request: ChangeChatAssistantRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.change_chat_assistant_use_case.execute(
@@ -189,7 +189,7 @@ class ChatCommandController:
     async def add_source(
         self,
         chat_id: UUID,
-        request: Annotated[AddSourceToChatRequest, Depends()],
+        request: AddSourceToChatRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.add_source_to_chat_use_case.execute(
@@ -236,7 +236,7 @@ class ChatCommandController:
     async def send_message(
         self,
         chat_id: UUID,
-        request: Annotated[SendMessageRequest, Depends()],
+        request: SendMessageRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         result = await self.send_message_use_case.execute(

@@ -96,7 +96,7 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      qdrant: 
+      qdrant:
         condition: service_healthy
     env_file:
       - .env
@@ -109,6 +109,16 @@ services:
       S3__ENDPOINT_URL: minio:9000
       QDRANT__ENDPOINT_URL: http://qdrant:6333
 
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_HOST_PORT}:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
 
 volumes:
   postgres_data:

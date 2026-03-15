@@ -57,7 +57,7 @@ class AssistantCommandController:
     @command_router.post("/", dependencies=[], status_code=status.HTTP_201_CREATED)
     async def create(
         self,
-        request: Annotated[CreateAssistantRequest, Depends()],
+        request: CreateAssistantRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> IDResponse:
         assistant_id = await self.create_assistant_use_case.execute(
@@ -77,7 +77,7 @@ class AssistantCommandController:
     async def update_info(
         self,
         assistant_id: UUID,
-        request: Annotated[UpdateAssistantInfoRequest, Depends()],
+        request: UpdateAssistantInfoRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_assistant_info_use_case.execute(
@@ -96,7 +96,7 @@ class AssistantCommandController:
     async def update_instructions(
         self,
         assistant_id: UUID,
-        request: Annotated[UpdateAssistantInstructionsRequest, Depends()],
+        request: UpdateAssistantInstructionsRequest,
         descriptor: Annotated[IdentityDescriptor, Depends(get_descriptor)],
     ) -> None:
         await self.update_assistant_instructions_use_case.execute(
