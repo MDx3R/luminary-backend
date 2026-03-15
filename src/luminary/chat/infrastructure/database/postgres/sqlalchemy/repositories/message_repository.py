@@ -31,14 +31,14 @@ class MessageRepository(IMessageRepository, IMessageReader):
         stmt = (
             select(MessageBase)
             .where(MessageBase.chat_id == chat_id.value)
-            .order_by(MessageBase.created_at)
+            .order_by(MessageBase.created_at.desc())
         )
 
         stmt = stmt.limit(limit)
 
         result = await self.executor.execute_scalar_many(stmt)
-
-        return [MessageMapper.to_domain(b) for b in result]
+        domain = [MessageMapper.to_domain(b) for b in reversed(result)]
+        return domain
 
     async def get_by_id(self, id: MessageId) -> Message:
         stmt = select(MessageBase).where(MessageBase.message_id == id.value)

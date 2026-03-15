@@ -61,7 +61,8 @@ class TestMessageReader:
         assert [m.content for m in result] == ["Message 0", "Message 1", "Message 2"]
 
     async def test_get_chat_messages_with_limit(self):
-        # Arrange
+        # Arrange: last N messages (newest in chat). With 5 messages, limit=2
+        # returns the 2 most recent in chronological order.
         _, messages = await self._add_chat_and_messages(count=5)
         chat_id = messages[0].chat_id
 
@@ -69,8 +70,8 @@ class TestMessageReader:
         result = await self.message_repository.get_chat_messages(chat_id, limit=2)
 
         # Assert
-        assert [m.id for m in result] == [m.id for m in messages[:2]]
-        assert [m.content for m in result] == ["Message 0", "Message 1"]
+        assert [m.id for m in result] == [m.id for m in messages[-2:]]
+        assert [m.content for m in result] == ["Message 3", "Message 4"]
 
     async def test_get_chat_messages_only_for_given_chat(self):
         # Arrange
