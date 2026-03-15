@@ -66,7 +66,7 @@ class AuthController:
     async def logout(self, token: Annotated[str, Depends(get_token)]) -> None:
         await self.logout_use_case.execute(LogoutCommand(refresh_token=token))
 
-    @auth_router.post("/refresh", dependencies=[Depends(require_authenticated)])
+    @auth_router.post("/refresh", dependencies=[Depends(require_unauthenticated)])
     async def refresh(
         self, form: Annotated[RefreshTokenRequest, Form()]
     ) -> AuthTokensResponse:
