@@ -7,7 +7,7 @@ from common.application.interfaces.services.event_bus import IEventBus
 from common.domain.events.event import Event
 from common.domain.interfaces.uuid_generator import IUUIDGenerator
 from faststream import Logger
-from faststream.rabbit import RabbitBroker, RabbitRoute
+from faststream.rabbit import RabbitBroker, RabbitMessage, RabbitRoute
 from pydantic import TypeAdapter, ValidationError
 from pydantic.alias_generators import to_snake
 
@@ -45,7 +45,9 @@ class FastStreamRabbitMQEventBus(IEventBus):
     ) -> RabbitRoute:
         adapter = TypeAdapter[EVENT](event_type)
 
-        async def wrapper(message_data: dict[str, Any], logger: Logger) -> None:
+        async def wrapper(
+            message_data: dict[str, Any], logger: Logger, msg: RabbitMessage
+        ) -> None:
             logger.info(f"processing {event_type.event_type()}")
 
             try:
@@ -54,12 +56,15 @@ class FastStreamRabbitMQEventBus(IEventBus):
                 logger.error(
                     f"validation failed for {event_type.event_type()} with data {message_data}"
                 )
+                await msg.reject()
                 raise
 
             try:
                 await handler.handle(event_data)
             except Exception:
                 logger.error(f"handler failed for {event_type.event_type()}")
+                await asyncio.sleep(3)
+                await msg.nack(requeue=True)
                 raise
 
         return RabbitRoute(wrapper, queue=cls.build_queue(prefix, event_type))
