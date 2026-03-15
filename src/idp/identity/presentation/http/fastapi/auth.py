@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+from idp.identity.application.exceptions import TokenExpiredError
 from idp.identity.application.interfaces.services.token_intospector import (
     ITokenIntrospector,
 )
@@ -56,4 +57,12 @@ async def get_descriptor(
     token: Annotated[str, Depends(oauth2_scheme)],
     token_introspector: Annotated[ITokenIntrospector, Depends()],
 ) -> IdentityDescriptor:
-    return await token_introspector.extract_user(token)
+
+    try:
+        user = await token_introspector.extract_user(token)
+    except TokenExpiredError as err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+        ) from err
+
+    return user
