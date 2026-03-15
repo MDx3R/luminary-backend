@@ -12,3 +12,7 @@ class CreatePageSourceRequest(BaseModel):
 class CreateLinkSourceRequest(BaseModel):
     title: str
     url: str
+
+
+class UpdateSourceRequest(BaseModel):
+    title: str

@@ -167,6 +167,12 @@ from luminary.source.application.interfaces.usecases.command.create_source_use_c
     ICreateLinkSourceUseCase,
     ICreatePageSourceUseCase,
 )
+from luminary.source.application.interfaces.usecases.command.delete_source_use_case import (
+    IDeleteSourceUseCase,
+)
+from luminary.source.application.interfaces.usecases.command.update_source_use_case import (
+    IUpdateSourceUseCase,
+)
 from luminary.source.application.interfaces.usecases.query.get_source_use_case import (
     IGetSourceByIdUseCase,
 )
@@ -510,6 +516,12 @@ def main() -> FastAPI:  # noqa: PLR0915
     )
     server.dependency_overrides[IListUserSourcesUseCase] = (
         lambda: source_container.list_user_sources_use_case()
+    )
+    server.dependency_overrides[IUpdateSourceUseCase] = (
+        lambda: source_container.update_source_use_case()
+    )
+    server.dependency_overrides[IDeleteSourceUseCase] = (
+        lambda: source_container.delete_source_use_case()
     )
 
     server.dependency_overrides[ICreateAssistantUseCase] = (
