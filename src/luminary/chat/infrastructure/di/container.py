@@ -85,6 +85,7 @@ class ChatContainer(containers.DeclarativeContainer):
     event_bus: providers.Dependency[Any] = providers.Dependency()
     inference_engine: providers.Dependency[Any] = providers.Dependency()
     assistant_repository: providers.Dependency[Any] = providers.Dependency()
+    folder_repository: providers.Dependency[Any] = providers.Dependency()
 
     chat_factory = providers.Singleton(
         ChatFactory, clock=clock, uuid_generator=uuid_generator
@@ -126,6 +127,7 @@ class ChatContainer(containers.DeclarativeContainer):
         inference_engine=inference_engine,
         chat_repository=event_bus_chat_repository,
         assistant_repository=assistant_repository,
+        folder_repository=folder_repository,
         message_reader=message_repository,
         message_repository=event_bus_message_repository,
         chat_access_policy=chat_access_policy,

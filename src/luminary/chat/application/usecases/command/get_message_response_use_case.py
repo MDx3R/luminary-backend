@@ -39,8 +39,13 @@ from luminary.chat.domain.interfaces.message_factory import (
 )
 from luminary.chat.domain.value_objects.chat_id import ChatId
 from luminary.chat.domain.value_objects.message_id import MessageId
+from luminary.folder.application.interfaces.repositories.folder_repository import (
+    IFolderRepository,
+)
+from luminary.folder.domain.entity.folder import Folder
 from luminary.model.application.interfaces.services.engine import (
     IInferenceEngine,
+    InferenceRequestDTO,
     MessageDTO,
     Role,
 )
@@ -78,6 +83,7 @@ class _ResolvedContext:
     chat: Chat
     messages: Sequence[Message]
     request: Message
+    folder: Folder | None
 
 
 class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
@@ -90,6 +96,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         inference_engine: IInferenceEngine,
         chat_repository: IChatRepository,
         assistant_repository: IAssistantRepository,
+        folder_repository: IFolderRepository,
         message_reader: IMessageReader,
         message_repository: IMessageRepository,
         chat_access_policy: IChatAccessPolicy,
@@ -99,6 +106,7 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         self.inference_engine = inference_engine
         self.chat_repository = chat_repository
         self.assistant_repository = assistant_repository
+        self.folder_repository = folder_repository
         self.message_reader = message_reader
         self.message_repository = message_repository
         self.chat_access_policy = chat_access_policy
@@ -121,15 +129,27 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         yield _stream_dto(response, StreamState.START, STREAM_START_CONTENT)
 
         history = _messages_to_history(ctx.messages[:-1])
-        source_ids = [sid.value for sid in ctx.chat.sources]
-        system_prompt = await self._get_system_prompt(ctx.chat)
+        if ctx.folder is not None:
+            source_ids = list(
+                {sid.value for sid in ctx.chat.sources}
+                | {sid.value for sid in ctx.folder.sources}
+            )
+        else:
+            source_ids = [sid.value for sid in ctx.chat.sources]
 
-        async for chunk in self.inference_engine.send(
+        system_prompt = await self._get_system_prompt(ctx)
+        editor_content: str | None = None
+        if ctx.folder is not None and ctx.folder.editor_content is not None:
+            editor_content = ctx.folder.editor_content.text
+
+        request = InferenceRequestDTO(
             query=ctx.request.content,
             system_prompt=system_prompt,
             source_ids=source_ids,
             history=history,
-        ):
+            editor_content=editor_content,
+        )
+        async for chunk in self.inference_engine.send(request):
             response.add_chunk(chunk.content)
             yield _stream_dto(response, StreamState.DELTA, chunk.content)
 
@@ -164,10 +184,21 @@ class GetStreamingMessageResponseUseCase(IGetStreamingMessageResponseUseCase):
         if request.id != message_id:
             raise NotFoundError(message_id)
 
-        return _ResolvedContext(chat=chat, messages=messages, request=request)
+        folder: Folder | None = None
+        if chat.folder_id is not None:
+            folder = await self.folder_repository.get_by_id(chat.folder_id)
 
-    async def _get_system_prompt(self, chat: Chat) -> str:
-        if chat.assistant_id is not None:
-            assistant = await self.assistant_repository.get_by_id(chat.assistant_id)
+        return _ResolvedContext(
+            chat=chat, messages=messages, request=request, folder=folder
+        )
+
+    async def _get_system_prompt(self, ctx: _ResolvedContext) -> str:
+        if ctx.chat.assistant_id is not None:
+            assistant = await self.assistant_repository.get_by_id(ctx.chat.assistant_id)
+            return assistant.instructions.prompt
+        if ctx.folder is not None and ctx.folder.assistant_id is not None:
+            assistant = await self.assistant_repository.get_by_id(
+                ctx.folder.assistant_id
+            )
             return assistant.instructions.prompt
         return self.DEFAULT_SYSTEM_PROMPT

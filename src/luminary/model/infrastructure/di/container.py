@@ -7,7 +7,8 @@ from llama_index.readers.file import UnstructuredReader
 
 from luminary.model.application.services.embedding_service import EmbeddingService
 from luminary.model.infrastructure.services.llama_index.engine import (
-    LlamaIndexEngine,
+    LUMINARY_BASE_SYSTEM_PROMPT,
+    ChatEngineLlamaIndexEngine,
 )
 from luminary.model.infrastructure.services.llama_index.file_content_extractor import (
     LlamaIndexFileContentExtractor,
@@ -42,9 +43,10 @@ class ModelContainer(containers.DeclarativeContainer):
     embedding_service = providers.Singleton(EmbeddingService, vector_store=vector_store)
 
     inference_engine = providers.Singleton(
-        LlamaIndexEngine,
+        ChatEngineLlamaIndexEngine,
         llm=llm,
         index=vector_store_index,
+        base_system_prompt=LUMINARY_BASE_SYSTEM_PROMPT,
         similarity_top_k=5,
         similarity_cutoff=0.7,
     )

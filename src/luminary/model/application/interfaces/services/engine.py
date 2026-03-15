@@ -22,13 +22,17 @@ class MessageDTO:
     role: Role
 
 
+@dataclass(frozen=True)
+class InferenceRequestDTO:
+    query: str
+    system_prompt: str
+    source_ids: Sequence[UUID]
+    history: Sequence[MessageDTO]
+    editor_content: str | None = None
+
+
 class IInferenceEngine(ABC):
     @abstractmethod
     def send(
-        self,
-        query: str,
-        *,
-        system_prompt: str,
-        source_ids: Sequence[UUID],
-        history: Sequence[MessageDTO],
+        self, request: InferenceRequestDTO
     ) -> AsyncGenerator[EngineStreamingResponse, None]: ...

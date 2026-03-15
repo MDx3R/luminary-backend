@@ -341,7 +341,9 @@ def main() -> FastAPI:  # noqa: PLR0915
     logger.info("llm initialized")
 
     # Embedding Model
-    MappedOpenAIEmbedding.override(config.llm.embed_model, config.llm.provider_embed_model)
+    MappedOpenAIEmbedding.override(
+        config.llm.embed_model, config.llm.provider_embed_model
+    )
     embed_model = MappedOpenAIEmbedding(
         model=config.llm.embed_model,
         api_key=config.llm.api_key,
@@ -358,7 +360,9 @@ def main() -> FastAPI:  # noqa: PLR0915
     vector_store = QdrantVectorStore(
         collection_name=config.qdrant.collection_name, aclient=qdrant_store.get_client()
     )
-    vector_store_index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
+    vector_store_index = VectorStoreIndex.from_vector_store(
+        vector_store=vector_store, embed_model=embed_model
+    )
 
     logger.info("vector store initialized")
 
@@ -494,6 +498,9 @@ def main() -> FastAPI:  # noqa: PLR0915
         event_bus=event_bus,
         chat_factory=chat_container.chat_factory,
         chat_repository=chat_container.event_bus_chat_repository,
+    )
+    chat_container.folder_repository.override(
+        folder_container.event_bus_folder_repository
     )
 
     rabbit_router = RabbitRouter(
