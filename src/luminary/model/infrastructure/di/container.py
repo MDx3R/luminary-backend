@@ -13,7 +13,7 @@ from luminary.model.infrastructure.services.llama_index.file_content_extractor i
     LlamaIndexFileContentExtractor,
 )
 from luminary.model.infrastructure.services.llama_index.vector_store import (
-    LlamaIndexVectorStore,
+    LlamaIndexSentenceSplitterVectorStore,
 )
 
 
@@ -30,9 +30,7 @@ class ModelContainer(containers.DeclarativeContainer):
 
     # Storage
     vector_store = providers.Singleton(
-        LlamaIndexVectorStore,
-        index=vector_store_index,
-        embed_model=embed_model,
+        LlamaIndexSentenceSplitterVectorStore, index=vector_store_index
     )
 
     # Services

@@ -1,6 +1,26 @@
 from typing import Any, ClassVar
 
+from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
+
+
+class MappedOpenAIEmbedding(OpenAIEmbedding):
+    """Maps logical embedding model names to provider-specific model ids.
+
+    Some OpenAI-compatible providers use prefixed model ids (e.g. openai/text-embedding-3-small).
+    This class maps the configured embed_model to the actual API model via MODEL_MAP.
+    """
+
+    MODEL_MAP: ClassVar[dict[str, str]] = {}
+
+    def __init__(self, model: str, **kwargs: Any) -> None:
+        api_model = self.MODEL_MAP.get(model, model)
+        kwargs["model_name"] = api_model
+        super().__init__(model=model, **kwargs)
+
+    @classmethod
+    def override(cls, key: str, value: str) -> None:
+        cls.MODEL_MAP[key] = value
 
 
 class MappedOpenAI(OpenAI):

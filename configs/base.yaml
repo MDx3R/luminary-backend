@@ -24,6 +24,7 @@ llm:
   api_key: "secret-key"
   base_url: "http://localhost:8080"
   model: "gpt-5-nano"
+  embed_model: "text-embedding-3-small"
 
 deploy:
   external_url: "https://example.com"

@@ -17,6 +17,8 @@ llm:
   base_url: "https://api.vsegpt.ru/v1"
   model: "gpt-5-nano"
   provider_model: "openai/gpt-5-nano"
+  embed_model: "text-embedding-3-small"
+  provider_embed_model: "emb-openai/text-embedding-3-small"
 
 deploy:
   external_url: "http://localhost"
