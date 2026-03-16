@@ -1,4 +1,3 @@
-import logging
 from collections.abc import AsyncGenerator, Sequence
 from typing import Final
 from uuid import UUID
@@ -44,7 +43,24 @@ If the current request includes a "Current document (editor)" section, treat it 
 
 
 def build_filters(source_ids: Sequence[UUID]) -> MetadataFilters:
-    """Build metadata filters for vector store index: source_id in (id1 or id2 or ...)."""
+    """Build metadata filters for vector store.
+
+    - When `source_ids` is non-empty, builds `source_id == id1 OR id2 OR ...`.
+    - When `source_ids` is empty, returns a filter that never matches any node.
+    """
+    if not source_ids:
+        # Always-false filter: we never write this metadata key, so no node matches it.
+        return MetadataFilters(
+            filters=[
+                MetadataFilter(
+                    key="__luminary_no_sources__",
+                    value="__no_match__",
+                    operator=FilterOperator.EQ,
+                )
+            ],
+            condition=FilterCondition.AND,
+        )
+
     return MetadataFilters(
         filters=[
             MetadataFilter(
@@ -175,23 +191,15 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
 
         chat_history = list[ChatMessage](build_history(request.history))
 
-        logging.info(request.source_ids)
-
-        if not request.source_ids:
-            retriever = VectorIndexRetriever(
-                index=self.index,
-                similarity_top_k=0,
-            )
-        else:
-            filters = build_filters(request.source_ids)
-            retriever = VectorIndexRetriever(
-                index=self.index,
-                filters=filters,
-                similarity_top_k=self.similarity_top_k,
-                node_postprocessors=[
-                    SimilarityPostprocessor(similarity_cutoff=self.similarity_cutoff)
-                ],
-            )
+        filters = build_filters(request.source_ids)
+        retriever = VectorIndexRetriever(
+            index=self.index,
+            filters=filters,
+            similarity_top_k=self.similarity_top_k,
+            node_postprocessors=[
+                SimilarityPostprocessor(similarity_cutoff=self.similarity_cutoff)
+            ],
+        )
 
         chat_engine = CondensePlusContextChatEngine.from_defaults(
             retriever=retriever,
