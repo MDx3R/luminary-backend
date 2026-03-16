@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator, Sequence
 from typing import Final
 from uuid import UUID
@@ -32,7 +33,7 @@ ROLE_MAP: Final[dict[Role, MessageRole]] = {
 
 LUMINARY_BASE_SYSTEM_PROMPT: Final[
     str
-] = """You are a co-pilot in a human-centric intelligent workspace. The user leads; you assist.
+] = """You are a co-pilot in a human-centric intelligent workspace called Luminary. The user leads; you assist.
 
 Your role: support the user's writing and analysis. 
 Ground your answers in the sources and context provided with the request. 
@@ -174,6 +175,8 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         )
 
         chat_history = list[ChatMessage](build_history(request.history))
+
+        logging.info(request.source_ids)
 
         retriever = VectorIndexRetriever(
             index=self.index,
