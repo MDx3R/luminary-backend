@@ -1,4 +1,3 @@
-import logging
 from collections.abc import AsyncGenerator, Sequence
 from typing import Final
 from uuid import UUID
@@ -199,8 +198,6 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         )
 
         chat_history = list[ChatMessage](build_history(request.history))
-
-        logging.info(request.source_ids)
 
         filters = build_filters(request.source_ids)
         retriever = VectorIndexRetriever(
