@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator, Sequence
 from typing import Final
 from uuid import UUID
@@ -8,6 +9,7 @@ from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.llms import LLM, MessageRole
 from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.schema import NodeWithScore
 from llama_index.core.vector_stores.types import (
     FilterCondition,
     FilterOperator,
@@ -43,24 +45,7 @@ If the current request includes a "Current document (editor)" section, treat it 
 
 
 def build_filters(source_ids: Sequence[UUID]) -> MetadataFilters:
-    """Build metadata filters for vector store.
-
-    - When `source_ids` is non-empty, builds `source_id == id1 OR id2 OR ...`.
-    - When `source_ids` is empty, returns a filter that never matches any node.
-    """
-    if not source_ids:
-        # Always-false filter: we never write this metadata key, so no node matches it.
-        return MetadataFilters(
-            filters=[
-                MetadataFilter(
-                    key="__luminary_no_sources__",
-                    value="__no_match__",
-                    operator=FilterOperator.EQ,
-                )
-            ],
-            condition=FilterCondition.AND,
-        )
-
+    """Build metadata filters for vector store index: source_id in (id1 or id2 or ...)."""
     return MetadataFilters(
         filters=[
             MetadataFilter(
@@ -129,18 +114,22 @@ class LlamaIndexEngine(IInferenceEngine):
     async def send(
         self, request: InferenceRequestDTO
     ) -> AsyncGenerator[EngineStreamingResponse, None]:
-        filters = build_filters(request.source_ids)
+        if request.source_ids:
+            filters = build_filters(request.source_ids)
 
-        retriever = VectorIndexRetriever(
-            index=self.index,
-            filters=filters,
-            similarity_top_k=self.similarity_top_k,
-            node_postprocessors=[
-                SimilarityPostprocessor(similarity_cutoff=self.similarity_cutoff)
-            ],
-        )
+            retriever = VectorIndexRetriever(
+                index=self.index,
+                filters=filters,
+                similarity_top_k=self.similarity_top_k,
+                node_postprocessors=[
+                    SimilarityPostprocessor(similarity_cutoff=self.similarity_cutoff)
+                ],
+            )
 
-        nodes = await retriever.aretrieve(request.query)
+            nodes = await retriever.aretrieve(request.query)
+        else:
+            nodes = list[NodeWithScore]()
+
         context_str = "\n\n".join([node.text for node in nodes])
 
         system_message = build_system_message(
@@ -165,13 +154,14 @@ class LlamaIndexEngine(IInferenceEngine):
 
 
 class ChatEngineLlamaIndexEngine(IInferenceEngine):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         llm: LLM,
         index: VectorStoreIndex,
         base_system_prompt: str = LUMINARY_BASE_SYSTEM_PROMPT,
         similarity_top_k: int = 5,
         similarity_cutoff: float = 0.7,
+        inference_fallback: IInferenceEngine | None = None,
     ):
         self.llm = llm
         self.index = index
@@ -179,9 +169,28 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         self.similarity_top_k = similarity_top_k
         self.similarity_cutoff = similarity_cutoff
 
+        if inference_fallback is not None:
+            self.inference_fallback = inference_fallback
+        else:
+            self.inference_fallback = LlamaIndexEngine(
+                llm,
+                index,
+                base_system_prompt,
+                similarity_top_k=similarity_top_k,
+                similarity_cutoff=similarity_cutoff,
+            )
+
     async def send(
         self, request: InferenceRequestDTO
     ) -> AsyncGenerator[EngineStreamingResponse, None]:
+        if not request.source_ids:
+            async_response_gen = self.inference_fallback.send(request)
+
+            async for chunk in async_response_gen:
+                yield chunk
+
+            return
+
         system_message = build_system_message(
             self.base_system_prompt, request.system_prompt
         )
@@ -190,6 +199,8 @@ class ChatEngineLlamaIndexEngine(IInferenceEngine):
         )
 
         chat_history = list[ChatMessage](build_history(request.history))
+
+        logging.info(request.source_ids)
 
         filters = build_filters(request.source_ids)
         retriever = VectorIndexRetriever(
